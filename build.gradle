@@ -28,6 +28,9 @@ shadowJar {
     archiveBaseName.set('bitway')
     archiveClassifier.set('')
     archiveVersion.set('')
+    manifest {
+        attributes 'Main-Class': 'com.example.bitway_back.BitWayBackApplication'
+    }
 }
 
 dependencies {
