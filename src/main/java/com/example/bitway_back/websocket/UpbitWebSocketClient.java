@@ -36,7 +36,7 @@ public class UpbitWebSocketClient implements Listener {
         this.broadcastService = broadcastService;
     }
 
-    @PostConstruct
+//    @PostConstruct
     public void connect() {
         List<String> krwMarkets = fetchKrwMarkets();
         if (krwMarkets.isEmpty()) {
