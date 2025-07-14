@@ -14,8 +14,13 @@ public class WebSocketConfig implements WebSocketConfigurer {
         this.priceWebSocketHandler = priceWebSocketHandler;
     }
 
+//    @Override
+//    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+//        registry.addHandler(priceWebSocketHandler, "/ws/price").setAllowedOrigins("*");
+//    }
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(priceWebSocketHandler, "/ws/price").setAllowedOrigins("*");
+        registry.addHandler(priceWebSocketHandler, "/ws")
+                .setAllowedOrigins("*");
     }
 }
