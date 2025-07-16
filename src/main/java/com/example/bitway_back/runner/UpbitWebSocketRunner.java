@@ -16,8 +16,13 @@ public class UpbitWebSocketRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+//        log.info("Starting Upbit WebSocket connection...");
+//        upbitWebSocketClient.connect();
+//        log.info("Upbit WebSocket connection started");
         log.info("Starting Upbit WebSocket connection...");
-        upbitWebSocketClient.connect();
+        Thread clientThread = new Thread(upbitWebSocketClient::connect, "UpbitWS");
+        clientThread.setDaemon(true); // 백그라운드로
+        clientThread.start();
         log.info("Upbit WebSocket connection started");
 
         // 메인 스레드 종료 방지
