@@ -1,9 +1,8 @@
 services:
   - type: web
     name: bitway-back
-    env: docker
+    env: docker # 반드시 docker!
     dockerfilePath: ./Dockerfile
     plan: free
-    healthCheckPath: /health
     autoDeploy: true
-    startCommand: "java -jar /app/app.jar"
+    healthCheckPath: /health
