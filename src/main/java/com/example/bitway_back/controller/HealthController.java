@@ -11,4 +11,9 @@ public class HealthController {
     public Mono<String> health() {
         return Mono.just("OK");
     }
+
+    @GetMapping("/")
+    public Mono<String> root() {
+        return Mono.just("BitWay 서버 실행 중");
+    }
 }
