@@ -6,3 +6,4 @@ services:
     plan: free
     healthCheckPath: /health
     autoDeploy: true
+    startCommand: "java -jar /app/app.jar"
