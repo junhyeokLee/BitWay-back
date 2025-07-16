@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PriceBroadcastService {
-
     private final PriceWebSocketHandler handler;
 
     public PriceBroadcastService(PriceWebSocketHandler handler) {
