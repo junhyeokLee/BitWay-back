@@ -21,11 +21,11 @@ public class UpbitWebSocketRunner implements ApplicationRunner {
         log.info("Upbit WebSocket connection started");
 
         // 메인 스레드 종료 방지
-        try {
-            Thread.currentThread().join(); // 무한 대기
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("Main thread interrupted", e);
-        }
+//        try {
+//            Thread.currentThread().join(); // 무한 대기
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt();
+//            log.error("Main thread interrupted", e);
+//        }
     }
 }
