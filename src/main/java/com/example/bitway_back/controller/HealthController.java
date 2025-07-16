@@ -1,14 +1,14 @@
 package com.example.bitway_back.controller;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 @RestController
-public class HealthCheckController {
+public class HealthController {
 
     @GetMapping("/health")
-    public ResponseEntity<String> healthCheck() {
-        return ResponseEntity.ok("OK");
+    public Mono<String> health() {
+        return Mono.just("OK");
     }
 }
