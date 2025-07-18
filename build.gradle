@@ -1,11 +1,12 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.2.5'
-    id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.springframework.boot' version '3.5.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
+
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '17'
 
 java {
     toolchain {
@@ -22,17 +23,27 @@ configurations {
 repositories {
     mavenCentral()
 }
+
+shadowJar {
+    archiveBaseName.set('bitway')
+    archiveClassifier.set('')
+    archiveVersion.set('')
+    manifest {
+        attributes 'Main-Class': 'com.example.bitway_back.BitWayBackApplication'
+    }
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'org.springframework:spring-messaging'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework:spring-messaging'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+    implementation 'org.postgresql:postgresql:42.7.7'
+    runtimeOnly 'org.postgresql:postgresql'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
-
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -41,6 +52,4 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
-tasks.register('buildJar', Jar) {
-    dependsOn 'bootJar'
-}
+tasks.build.dependsOn(shadowJar)
