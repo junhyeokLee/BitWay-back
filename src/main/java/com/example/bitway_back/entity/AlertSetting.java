@@ -23,5 +23,7 @@ public class AlertSetting {
 
     private boolean above; // true: 위로 돌파, false: 아래로 하락
 
+    @Builder.Default
+    @Column(nullable = false)
     private boolean enabled = true;
 }
