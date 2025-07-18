@@ -8,6 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "bitway_user") // ← 여기 핵심!
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
