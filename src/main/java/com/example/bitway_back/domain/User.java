@@ -1,4 +1,4 @@
-package com.example.bitway_back.entity;
+package com.example.bitway_back.domain;
 
 import jakarta.persistence.*;
 import lombok.*;

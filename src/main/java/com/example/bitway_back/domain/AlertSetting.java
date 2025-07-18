@@ -1,4 +1,4 @@
-package com.example.bitway_back.entity;
+package com.example.bitway_back.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,28 +8,22 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "favorite_coin")
-public class FavoriteCoin {
+@Table(name = "alert_setting")
+public class AlertSetting {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String userId;
+
     private String coinCode; // 예: KRW-BTC
 
-    private String coinName;
+    private Double targetPrice;
+
+    private boolean above; // true: 위로 돌파, false: 아래로 하락
 
     @Builder.Default
     @Column(nullable = false)
     private boolean enabled = true;
-
-    @Column
-    private Boolean alertEnabled;
-
-    @Column
-    private Double alertPrice;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")  // FK
-    private User user;
 }

@@ -1,8 +1,8 @@
 package com.example.bitway_back.service;
 
 import com.example.bitway_back.dto.FavoriteDto;
-import com.example.bitway_back.entity.FavoriteCoin;
-import com.example.bitway_back.entity.User;
+import com.example.bitway_back.domain.FavoriteCoin;
+import com.example.bitway_back.domain.User;
 import com.example.bitway_back.repository.FavoriteCoinRepository;
 import com.example.bitway_back.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.example.bitway_back.controller;
 import com.example.bitway_back.dto.FavoriteDto;
-import com.example.bitway_back.entity.FavoriteCoin;
+import com.example.bitway_back.domain.FavoriteCoin;
 import com.example.bitway_back.service.FavoriteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
