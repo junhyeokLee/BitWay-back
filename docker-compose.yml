@@ -22,7 +22,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/bitway
+      SPRING_DATASOURCE_HOST: db
+      SPRING_DATASOURCE_PORT: 5432
+      SPRING_DATASOURCE_DB: bitway
       SPRING_DATASOURCE_USERNAME: bitway_user
       SPRING_DATASOURCE_PASSWORD: bitway_pass
     depends_on:
