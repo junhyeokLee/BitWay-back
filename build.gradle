@@ -43,3 +43,9 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+shadowJar {
+    archiveBaseName.set('BitWay_Back')
+    archiveVersion.set('0.0.1-SNAPSHOT')
+    archiveClassifier.set('')
+}
