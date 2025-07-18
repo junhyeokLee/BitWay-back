@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: bitway-back
-    env: docker # 반드시 docker!
-    dockerfilePath: ./Dockerfile
-    plan: free
-    autoDeploy: true
-    healthCheckPath: /health
