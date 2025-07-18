@@ -23,10 +23,7 @@ configurations {
 repositories {
     mavenCentral()
 }
-bootJar {
-    archiveBaseName.set("BitWay_Back")
-    archiveVersion.set("0.0.1-SNAPSHOT")
-}
+
 shadowJar {
     archiveBaseName.set('bitway')
     archiveClassifier.set('')
