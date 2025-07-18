@@ -1,4 +1,4 @@
-package com.example.bitway_back.config;
-
-public class WebConfig {
-}
+//package com.example.bitway_back.config;
+//
+//public class WebConfig {
+//}
