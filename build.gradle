@@ -48,4 +48,8 @@ shadowJar {
     archiveBaseName.set('BitWay_Back')
     archiveVersion.set('0.0.1-SNAPSHOT')
     archiveClassifier.set('')
+
+    manifest {
+        attributes 'Main-Class': 'com.example.bitway_back.BitWayBackApplication'
+    }
 }
