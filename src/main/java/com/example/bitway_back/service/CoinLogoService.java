@@ -1,5 +1,6 @@
 package com.example.bitway_back.service;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.util.Map;
 public class CoinLogoService {
     private final RestTemplate restTemplate = new RestTemplate();
 
+    @Cacheable(value = "coinLogos", key = "'all'", cacheManager = "cacheManager")
     public Map<String, String> getLogos() {
         Map<String, String> logos = new HashMap<>();
         try {

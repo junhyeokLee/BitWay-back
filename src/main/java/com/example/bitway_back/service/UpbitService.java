@@ -30,7 +30,6 @@ public class UpbitService {
                 .collect(Collectors.toList());
     }
 
-    // ✅ Ticker 요청
     public List<Map<String, Object>> getTickers(List<String> marketCodes) {
         if (marketCodes.isEmpty()) return List.of();
 
