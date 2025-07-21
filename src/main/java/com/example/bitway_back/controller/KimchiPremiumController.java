@@ -29,5 +29,13 @@ public class KimchiPremiumController {
         KimchiPremiumDto result = kimchiPremiumService.compare(symbol.toUpperCase(),domestic, overseas);
         return ResponseEntity.ok(result);
     }
+    @GetMapping("/kimp/all")
+    public ResponseEntity<List<KimchiPremiumDto>> getAllKimp(
+            @RequestParam String domestic,
+            @RequestParam String overseas
+    ) {
+        List<KimchiPremiumDto> premiums = kimchiPremiumService.getAllPremiums(domestic, overseas);
+        return ResponseEntity.ok(premiums);
+    }
 }
 
