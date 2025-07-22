@@ -2,7 +2,6 @@ package com.example.bitway_back.service.exchange;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -72,4 +71,5 @@ public class UpbitPriceService implements ExchangePriceService {
     public Map<String, Double> getAllPricesUsd() {
         throw new UnsupportedOperationException("Upbit는 USD 가격을 지원하지 않습니다.");
     }
+
 }

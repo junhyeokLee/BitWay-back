@@ -1,6 +1,5 @@
 package com.example.bitway_back.service.exchange;
 
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -54,8 +53,10 @@ public class BinancePriceService implements ExchangePriceService {
         }
     }
 
+
     @Override
     public double getPriceKrw(String symbol) {
         throw new UnsupportedOperationException("Binance는 KRW 가격 미지원");
     }
+
 }

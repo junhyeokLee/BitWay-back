@@ -14,7 +14,6 @@ public class ExchangeRateService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-
     @Cacheable(value = "exchangeRate", key = "'usdToKrw'", cacheManager = "cacheManager")
     public double getUsdToKrwRate() {
         try {
