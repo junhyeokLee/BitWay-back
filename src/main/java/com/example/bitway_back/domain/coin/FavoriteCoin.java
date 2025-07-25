@@ -1,5 +1,6 @@
-package com.example.bitway_back.domain;
+package com.example.bitway_back.domain.coin;
 
+import com.example.bitway_back.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,6 +31,6 @@ public class FavoriteCoin {
     private Double alertPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")  // FK
+    @JoinColumn(name = "user_id") // FK → bitway_user.id
     private User user;
 }

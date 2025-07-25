@@ -1,7 +1,9 @@
 package com.example.bitway_back.controller;
 
-import com.example.bitway_back.dto.KimchiPremiumDto;
+import com.example.bitway_back.domain.user.User;
+import com.example.bitway_back.dto.coin.KimchiPremiumDto;
 import com.example.bitway_back.service.KimchiPremiumService;
+import com.example.bitway_back.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -36,10 +38,13 @@ public class KimchiPremiumController {
     public ResponseEntity<List<KimchiPremiumDto>> getAllKimp(
             @RequestParam String domestic,
             @RequestParam String overseas,
-            @RequestParam(defaultValue = "price") String sortBy
+            @RequestParam(defaultValue = "price_desc") String sortBy
     ) {
-        List<KimchiPremiumDto> premiums = kimchiPremiumService.getAllPremiums(domestic, overseas,sortBy);
+        String userId = SecurityUtil.getCurrentUser()
+                .map(User::getUserId)
+                .orElse(null);
+
+        List<KimchiPremiumDto> premiums = kimchiPremiumService.getAllPremiums(userId, domestic, overseas, sortBy);
         return ResponseEntity.ok(premiums);
     }
 }
-

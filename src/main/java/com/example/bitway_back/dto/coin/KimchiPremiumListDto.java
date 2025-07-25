@@ -1,4 +1,4 @@
-package com.example.bitway_back.dto;
+package com.example.bitway_back.dto.coin;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

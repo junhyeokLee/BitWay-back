@@ -1,6 +1,6 @@
 package com.example.bitway_back.controller;
-import com.example.bitway_back.dto.FavoriteDto;
-import com.example.bitway_back.domain.FavoriteCoin;
+import com.example.bitway_back.dto.coin.FavoriteDto;
+import com.example.bitway_back.domain.coin.FavoriteCoin;
 import com.example.bitway_back.service.FavoriteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,9 +18,9 @@ public class FavoriteController {
     private final FavoriteService favoriteService;
 
     @Operation(summary = "즐겨찾기 목록 조회 API")
-    @GetMapping("/{uuid}")
-    public List<FavoriteCoin> list(@PathVariable String uuid) {
-        return favoriteService.getFavorites(uuid);
+    @GetMapping
+    public List<FavoriteCoin> list() {
+        return favoriteService.getFavorites();
     }
 
     @Operation(summary = "즐겨찾기 추가 API")

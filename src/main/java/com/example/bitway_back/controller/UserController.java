@@ -1,6 +1,6 @@
 package com.example.bitway_back.controller;
 
-import com.example.bitway_back.domain.User;
+import com.example.bitway_back.domain.user.User;
 import com.example.bitway_back.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,8 +22,8 @@ public class UserController {
     }
 
     @Operation(summary = "사용자 조회 API")
-    @GetMapping("/{id}")
-    public User getUser(@PathVariable Long id) {
-        return userService.findById(id).orElseThrow();
+    @GetMapping("/{userId}")
+    public User getUser(@PathVariable String userId) {
+        return userService.findById(userId).orElseThrow();
     }
 }

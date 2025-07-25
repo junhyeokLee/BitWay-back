@@ -15,8 +15,6 @@ public class UpbitPriceService implements ExchangePriceService {
     private final RestTemplate restTemplate = new RestTemplate();
     private static final Logger logger = LoggerFactory.getLogger(UpbitPriceService.class);
 
-
-
     @Override
     public double getPriceKrw(String symbol) {
         String market = "KRW-" + symbol.toUpperCase();
@@ -42,29 +40,41 @@ public class UpbitPriceService implements ExchangePriceService {
         throw new UnsupportedOperationException("Upbit는 USD 가격을 지원하지 않습니다.");
     }
 
-    @Override
-    public Map<String, Double> getAllPricesKrw() {
+    public Map<String, Double> getAllPricesKrw(boolean descending) {
         try {
             String marketsUrl = "https://api.upbit.com/v1/market/all?isDetails=false";
             List<Map<String, Object>> markets = restTemplate.getForObject(marketsUrl, List.class);
             List<String> krwMarkets = markets.stream()
-                .map(m -> (String) m.get("market"))
-                .filter(market -> market.startsWith("KRW-"))
-                .collect(Collectors.toList());
+                    .map(m -> (String) m.get("market"))
+                    .filter(market -> market.startsWith("KRW-"))
+                    .collect(Collectors.toList());
 
             if (krwMarkets.isEmpty()) return Map.of();
 
             String tickersUrl = "https://api.upbit.com/v1/ticker?markets=" + String.join(",", krwMarkets);
             List<Map<String, Object>> tickers = restTemplate.getForObject(tickersUrl, List.class);
 
-            return tickers.stream().collect(Collectors.toMap(
-                t -> ((String) t.get("market")).replace("KRW-", ""),
-                t -> ((Number) t.get("trade_price")).doubleValue()
-            ));
+            return tickers.stream()
+                    .filter(t -> t.get("market") != null && t.get("trade_price") instanceof Number)
+                    .sorted((t1, t2) -> {
+                        double price1 = ((Number) t1.get("trade_price")).doubleValue();
+                        double price2 = ((Number) t2.get("trade_price")).doubleValue();
+                        return descending ? Double.compare(price2, price1) : Double.compare(price1, price2);
+                    })
+                    .collect(Collectors.toMap(
+                            t -> ((String) t.get("market")).replace("KRW-", ""),
+                            t -> ((Number) t.get("trade_price")).doubleValue(),
+                            (e1, e2) -> e1,
+                            java.util.LinkedHashMap::new
+                    ));
         } catch (Exception e) {
-            logger.error("[Upbit] 전체 가격 조회 실패: {}", e.getMessage());
+            logger.error("[Upbit] 전체 가격 조회 실패: {}", e.getMessage(), e);
             return Map.of();
         }
+    }
+
+    public Map<String, Double> getAllPricesKrw() {
+        return getAllPricesKrw(true);
     }
 
     @Override

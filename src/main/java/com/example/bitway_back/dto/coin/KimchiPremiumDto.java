@@ -1,4 +1,4 @@
-package com.example.bitway_back.dto;
+package com.example.bitway_back.dto.coin;
 
 import lombok.*;
 
@@ -18,4 +18,6 @@ public class KimchiPremiumDto {
     private double overseasPriceInKrw;  // 환율 적용된 해외 가격 (KRW)
     private double priceGap;            // 국내 가격과 해외 가격(KRW 환산) 차이 (원)
     private String imageUrl;              // 로고 이미지 URL
+    private boolean isFavorite;
+    private int sortPriority;
 }

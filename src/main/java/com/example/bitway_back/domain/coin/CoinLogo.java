@@ -1,4 +1,4 @@
-package com.example.bitway_back.domain;
+package com.example.bitway_back.domain.coin;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

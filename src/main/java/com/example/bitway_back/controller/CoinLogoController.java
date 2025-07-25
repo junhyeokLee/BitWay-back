@@ -1,6 +1,6 @@
 package com.example.bitway_back.controller;
 
-import com.example.bitway_back.domain.CoinLogo;
+import com.example.bitway_back.domain.coin.CoinLogo;
 import com.example.bitway_back.service.CoinLogoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/coins")

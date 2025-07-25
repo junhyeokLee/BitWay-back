@@ -1,8 +1,7 @@
 package com.example.bitway_back.service;
 
-import com.example.bitway_back.domain.CoinLogo;
+import com.example.bitway_back.domain.coin.CoinLogo;
 import com.example.bitway_back.repository.CoinLogoRepository;
-import com.example.bitway_back.service.UpbitService;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -14,8 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static java.sql.DriverManager.println;
 
 @Service
 @Transactional

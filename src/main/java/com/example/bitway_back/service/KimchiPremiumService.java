@@ -1,12 +1,13 @@
 package com.example.bitway_back.service;
 
-import com.example.bitway_back.domain.CoinLogo;
-import com.example.bitway_back.dto.KimchiPremiumDto;
+import com.example.bitway_back.domain.coin.CoinLogo;
+import com.example.bitway_back.dto.coin.KimchiPremiumDto;
 import com.example.bitway_back.service.exchange.ExchangePriceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +16,7 @@ public class KimchiPremiumService {
     private final ExchangeRateService exchangeRateService;
     private final CoinLogoService coinLogoService;
     private final Map<String, ExchangePriceService> exchangeServices;
+    private final FavoriteService favoriteService;
 
     public KimchiPremiumDto compare(String symbol, String domestic, String overseas) {
 
@@ -60,7 +62,7 @@ public class KimchiPremiumService {
                 .build();
     }
 
-    public List<KimchiPremiumDto> getAllPremiums(String domestic, String overseas,String sortBy) {
+    public List<KimchiPremiumDto> getAllPremiums(String userId, String domestic, String overseas,String sortBy) {
         ExchangePriceService exchange = exchangeServices.get(domestic.toLowerCase(Locale.ROOT));
 
         if (exchange == null) {
@@ -75,8 +77,13 @@ public class KimchiPremiumService {
         double exchangeRate = exchangeRateService.getUsdToKrwRate();
         List<CoinLogo> coinLogos = coinLogoService.getLogos();
 
-        List<KimchiPremiumDto> result = new ArrayList<>();
+        Set<String> favorites = userId != null && !userId.isBlank()
+                ? favoriteService.getFavorites().stream()
+                .map(fav -> fav.getCoinCode().toUpperCase(Locale.ROOT))
+                .collect(Collectors.toSet())
+                : Set.of(); // 비로그인 사용자면 빈 Set
 
+        List<KimchiPremiumDto> result = new ArrayList<>();
 
         for (String symbol : domesticPrices.keySet()) {
             if (!overseasPrices.containsKey(symbol)) continue;
@@ -99,6 +106,9 @@ public class KimchiPremiumService {
                     })
                     .orElse(Map.of());
 
+            boolean isFavorite = favorites.contains(symbol.toUpperCase(Locale.ROOT));
+            int sortPriority = isFavorite ? 0 : 1;
+
             result.add(KimchiPremiumDto.builder()
                     .symbol(symbol)
                     .domesticExchange(domestic)
@@ -111,17 +121,28 @@ public class KimchiPremiumService {
                     .priceGap(priceGap)
                     .imageUrl(logoInfo.getOrDefault("imageUrl", ""))
                     .symbolName(logoInfo.getOrDefault("symbolName", ""))
+                    .isFavorite(isFavorite)
+                    .sortPriority(sortPriority)
                     .build());
         }
 
-        if ("price".equalsIgnoreCase(sortBy)) {
-            result.sort(Comparator.comparingDouble(KimchiPremiumDto::getDomesticPrice));
-        }
-        else if ("kimp".equalsIgnoreCase(sortBy)) {
-            result.sort(Comparator.comparingDouble(KimchiPremiumDto::getPremiumRate).reversed());
-        }
+        result.sort(Comparator
+            .comparingInt(KimchiPremiumDto::getSortPriority)
+            .thenComparing(sortingComparator(sortBy))
+        );
 
         return result;
+    }
+
+
+    private Comparator<KimchiPremiumDto> sortingComparator(String sortBy) {
+        return switch (sortBy.toLowerCase()) {
+            case "price" -> Comparator.comparingDouble(KimchiPremiumDto::getDomesticPrice);
+            case "price_desc" -> Comparator.comparingDouble(KimchiPremiumDto::getDomesticPrice).reversed();
+            case "kimp" -> Comparator.comparingDouble(KimchiPremiumDto::getPremiumRate);
+            case "kimp_desc" -> Comparator.comparingDouble(KimchiPremiumDto::getPremiumRate).reversed();
+            default -> Comparator.comparingDouble(KimchiPremiumDto::getDomesticPrice).reversed();
+        };
     }
 
 }
