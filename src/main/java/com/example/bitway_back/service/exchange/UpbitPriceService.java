@@ -62,7 +62,7 @@ public class UpbitPriceService implements ExchangePriceService {
                         return descending ? Double.compare(price2, price1) : Double.compare(price1, price2);
                     })
                     .collect(Collectors.toMap(
-                            t -> ((String) t.get("market")).replace("KRW-", ""),
+                            t -> ((String) t.get("market")).substring(4),
                             t -> ((Number) t.get("trade_price")).doubleValue(),
                             (e1, e2) -> e1,
                             java.util.LinkedHashMap::new

@@ -25,7 +25,6 @@ public class BinancePriceService implements ExchangePriceService {
                 return Double.parseDouble(response.get("price").toString());
             }
         } catch (Exception e) {
-            System.out.println("🔥 Binance 호출 실패: " + e.getMessage());
         }
 
         return -1; // 실패 시 -1 반환
@@ -45,12 +44,17 @@ public class BinancePriceService implements ExchangePriceService {
 
             return response.stream()
                     .filter(item -> item.get("symbol").endsWith("USDT"))
+                    .map(item -> Map.entry(
+                            item.get("symbol").replace("USDT", ""),
+                            Double.parseDouble(item.get("price"))
+                    ))
                     .collect(Collectors.toMap(
-                            item -> item.get("symbol").replace("USDT", ""),
-                            item -> Double.parseDouble(item.get("price"))
+                            Map.Entry::getKey,
+                            Map.Entry::getValue,
+                            (e1, e2) -> e1,
+                            java.util.LinkedHashMap::new
                     ));
         } catch (Exception e) {
-            System.out.println("🔥 Binance 전체 가격 조회 실패: " + e.getMessage());
             return Map.of();
         }
     }
@@ -68,7 +72,6 @@ public class BinancePriceService implements ExchangePriceService {
             Map<?, ?> response = restTemplate.getForObject(url, Map.class);
             return Double.parseDouble(response.get("priceChangePercent").toString());
         } catch (Exception e) {
-            System.out.println("🔥 Binance 변동률 조회 실패: " + e.getMessage());
         }
         return -1;
     }
@@ -80,7 +83,6 @@ public class BinancePriceService implements ExchangePriceService {
             Map<?, ?> response = restTemplate.getForObject(url, Map.class);
             return Double.parseDouble(response.get("quoteVolume").toString());
         } catch (Exception e) {
-            System.out.println("🔥 Binance 거래대금 조회 실패: " + e.getMessage());
         }
         return -1;
     }
@@ -95,7 +97,6 @@ public class BinancePriceService implements ExchangePriceService {
             double open = Double.parseDouble(response.get("openPrice").toString());
             return (high - low) / open * 100;
         } catch (Exception e) {
-            System.out.println("🔥 Binance 변동성 계산 실패: " + e.getMessage());
         }
         return -1;
     }
