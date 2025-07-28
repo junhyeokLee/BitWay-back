@@ -2,6 +2,7 @@ package com.example.bitway_back.config;
 
 import com.example.bitway_back.dto.coin.KimchiPremiumDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,9 +16,21 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @EnableCaching
 public class RedisConfig {
 
+    @Value("${spring.data.redis.host}")
+    private String host;
+
+    @Value("${spring.data.redis.port}")
+    private int port;
+
+    @Value("${spring.data.redis.password}")
+    private String password;
+
+
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory("localhost", 6379); // 필요 시 호스트/포트 수정
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(host, port);
+        factory.setPassword(password);
+        return factory;
     }
 
     @Bean
