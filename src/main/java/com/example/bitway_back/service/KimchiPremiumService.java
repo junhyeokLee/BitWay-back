@@ -53,7 +53,13 @@ public class KimchiPremiumService {
         }
 
         ExchangePriceService overseasService = exchangeServices.get(overseas.toLowerCase(Locale.ROOT));
-        Map<String, Double> overseasPrices = overseasService.getAllPricesUsd();
+        Map<String, Double> overseasPrices = overseasService.getAllPricesUsd()
+            .entrySet().stream()
+            .filter(e -> e.getKey().endsWith("USDT"))
+            .collect(Collectors.toMap(
+                e -> e.getKey().replace("USDT", ""),
+                Map.Entry::getValue
+            ));
 
         Map<String, Double> domesticPrices = exchange.getAllPricesKrw(); // e.g., BTC → 1000만 원
 
@@ -76,9 +82,9 @@ public class KimchiPremiumService {
             boolean isFavorite = favorites.contains(symbol.toUpperCase(Locale.ROOT));
 
             // 새로 추가된 데이터 (priceChangePercent24h, volume24h, volatilityIndex)
-            double priceChangePercent24h = overseasService.getPriceChangePercent24h(symbol);
-            double volume24h = overseasService.getVolume24h(symbol);
-            double volatilityIndex = overseasService.getVolatilityIndex(symbol);
+            double priceChangePercent24h = overseasService.getPriceChangePercent24h(symbol + "USDT");
+            double volume24h = overseasService.getVolume24h(symbol + "USDT");
+            double volatilityIndex = overseasService.getVolatilityIndex(symbol + "USDT");
 
             result.add(KimchiPremiumCalculator.calculate(
                 symbol,

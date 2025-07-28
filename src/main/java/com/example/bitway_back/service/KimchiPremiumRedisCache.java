@@ -34,9 +34,10 @@ public class KimchiPremiumRedisCache {
     }
 
     public void put(KimchiPremiumDto dto) {
-        KimchiPremiumDto existing = redisTemplate.opsForValue().get(PREFIX + dto.getSymbol());
+        String cacheKey = PREFIX + dto.getSymbol() + ":" + dto.getDomesticExchange() + ":" + dto.getOverseasExchange();
+        KimchiPremiumDto existing = redisTemplate.opsForValue().get(cacheKey);
         if (hasChanged(existing, dto)) {
-            redisTemplate.opsForValue().set(PREFIX + dto.getSymbol(), dto, Duration.ofMinutes(5));
+            redisTemplate.opsForValue().set(cacheKey, dto, Duration.ofMinutes(5));
         }
     }
 

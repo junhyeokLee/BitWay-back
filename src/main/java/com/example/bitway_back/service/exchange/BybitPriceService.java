@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Service("bybit")
+//@Service("bybit")
 public class BybitPriceService implements ExchangePriceService {
 
     private static final Logger logger = LoggerFactory.getLogger(BybitPriceService.class);

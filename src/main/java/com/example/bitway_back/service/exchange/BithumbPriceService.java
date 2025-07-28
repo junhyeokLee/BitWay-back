@@ -8,7 +8,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Service("bithumb")
+//@Service("bithumb")
 public class BithumbPriceService implements ExchangePriceService {
 
     private final RestTemplate restTemplate = new RestTemplate();
