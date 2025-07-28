@@ -32,8 +32,8 @@ public class SwaggerConfig {
 
     private Info apiInfo() {
         return new Info()
-                .title("KBL Data Entry BackEnd")
-                .description("신규 KBL 공식입력기 API 명세서입니다.")
+                .title("BITWAY Data Entry BackEnd")
+                .description("BitWay API 명세서입니다.")
                 .version("0.1");
     }
 }

@@ -1,11 +1,13 @@
 package com.example.bitway_back.dto.coin;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class KimchiPremiumDto {
     private String symbol;              // 예: BTC
     private String symbolName;          // 예: 비트코인

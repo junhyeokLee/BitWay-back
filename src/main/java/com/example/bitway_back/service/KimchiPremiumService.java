@@ -3,6 +3,7 @@ package com.example.bitway_back.service;
 import com.example.bitway_back.domain.coin.CoinLogo;
 import com.example.bitway_back.dto.coin.KimchiPremiumDto;
 import com.example.bitway_back.service.exchange.ExchangePriceService;
+import com.example.bitway_back.util.KimchiPremiumCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,35 +32,17 @@ public class KimchiPremiumService {
         double overseasPriceUsd = overseasService.getPriceUsd(symbol);
         double exchangeRate = exchangeRateService.getUsdToKrwRate();
         List<CoinLogo> coinLogos = coinLogoService.getLogos();
-        double overseasPriceKrw = overseasPriceUsd * exchangeRate;
 
-        double premium = ((domesticPrice - overseasPriceKrw) / overseasPriceKrw) * 100;
-
-//        Map<String, String> logoInfo = coinLogos.getOrDefault(symbol.toUpperCase(Locale.ROOT), Map.of());
-        Map<String, String> logoInfo = coinLogos.stream()
-                .filter(c -> c.getSymbol().equalsIgnoreCase(symbol))
-                .findFirst()
-                .map(c -> {
-                    Map<String, String> map = new HashMap<>();
-                    map.put("imageUrl", c.getImageUrl());
-                    map.put("symbolName", c.getSymbolName());
-                    return map;
-                })
-                .orElse(Map.of());
-
-        return KimchiPremiumDto.builder()
-                .symbol(symbol)
-                .domesticExchange(domestic)
-                .domesticPrice(domesticPrice)
-                .overseasExchange(overseas)
-                .overseasPrice(overseasPriceUsd)
-                .exchangeRate(exchangeRate)
-                .premiumRate(premium)
-                .overseasPriceInKrw(overseasPriceKrw)
-                .priceGap(domesticPrice - overseasPriceKrw)
-                .imageUrl(logoInfo.getOrDefault("imageUrl", ""))
-                .symbolName(logoInfo.getOrDefault("symbolName", ""))
-                .build();
+        return KimchiPremiumCalculator.calculate(
+            symbol,
+            domesticPrice,
+            overseasPriceUsd,
+            exchangeRate,
+            domestic,
+            overseas,
+            false,
+            coinLogos
+        );
     }
 
     public List<KimchiPremiumDto> getAllPremiums(String userId, String domestic, String overseas,String sortBy) {
@@ -90,40 +73,18 @@ public class KimchiPremiumService {
 
             double domesticPrice = domesticPrices.get(symbol);
             double overseasPriceUsd = overseasPrices.get(symbol);
-            double overseasPriceKrw = overseasPriceUsd * exchangeRate;
-
-            double priceGap = domesticPrice - overseasPriceKrw;
-            double premium = (priceGap / overseasPriceKrw) * 100;
-
-            Map<String, String> logoInfo = coinLogos.stream()
-                    .filter(c -> c.getSymbol().equalsIgnoreCase(symbol))
-                    .findFirst()
-                    .map(c -> {
-                        Map<String, String> map = new HashMap<>();
-                        map.put("imageUrl", c.getImageUrl());
-                        map.put("symbolName", c.getSymbolName());
-                        return map;
-                    })
-                    .orElse(Map.of());
-
             boolean isFavorite = favorites.contains(symbol.toUpperCase(Locale.ROOT));
-            int sortPriority = isFavorite ? 0 : 1;
 
-            result.add(KimchiPremiumDto.builder()
-                    .symbol(symbol)
-                    .domesticExchange(domestic)
-                    .domesticPrice(domesticPrice)
-                    .overseasExchange(overseas)
-                    .overseasPrice(overseasPriceUsd)
-                    .exchangeRate(exchangeRate)
-                    .premiumRate(premium)
-                    .overseasPriceInKrw(overseasPriceKrw)
-                    .priceGap(priceGap)
-                    .imageUrl(logoInfo.getOrDefault("imageUrl", ""))
-                    .symbolName(logoInfo.getOrDefault("symbolName", ""))
-                    .isFavorite(isFavorite)
-                    .sortPriority(sortPriority)
-                    .build());
+            result.add(KimchiPremiumCalculator.calculate(
+                symbol,
+                domesticPrice,
+                overseasPriceUsd,
+                exchangeRate,
+                domestic,
+                overseas,
+                isFavorite,
+                coinLogos
+            ));
         }
 
         result.sort(Comparator

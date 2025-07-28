@@ -21,4 +21,8 @@ public class SecurityUtil {
 
         return Optional.of(((UserDetailsImpl) authentication.getPrincipal()).user());
     }
+
+    public static String getCurrentUserId() {
+        return getCurrentUser().map(user -> user.getId().toString()).orElse(null);
+    }
 }
