@@ -29,11 +29,9 @@ public class ExchangeRateService {
 
             return Double.parseDouble(quotes.get("USDKRW").toString());
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("환율 API 호출 실패: " + e.getMessage());
+            // 1일 캐시 TTL을 고려하여 fallback 값 제공
+            System.err.println("환율 호출 실패: " + e.getMessage());
+            return 1380.0;
         }
     }
 }
-
-
-
