@@ -54,4 +54,43 @@ public class BithumbPriceService implements ExchangePriceService {
     public Map<String, Double> getAllPricesUsd() {
         throw new UnsupportedOperationException("Bithumb는 USD 가격을 지원하지 않습니다.");
     }
+
+    public double getPriceChangePercent24h(String symbol) {
+        String url = "https://api.bithumb.com/public/ticker/" + symbol.toUpperCase() + "_KRW";
+        try {
+            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            Map<String, String> data = (Map<String, String>) response.get("data");
+            return Double.parseDouble(data.get("fluctate_rate_24H"));
+        } catch (Exception e) {
+            logger.error("[Bithumb] 변동률 조회 실패 (symbol={}): {}", symbol, e.getMessage());
+        }
+        return -1;
+    }
+
+    public double getVolume24h(String symbol) {
+        String url = "https://api.bithumb.com/public/ticker/" + symbol.toUpperCase() + "_KRW";
+        try {
+            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            Map<String, String> data = (Map<String, String>) response.get("data");
+            return Double.parseDouble(data.get("acc_trade_value_24H"));
+        } catch (Exception e) {
+            logger.error("[Bithumb] 거래대금 조회 실패 (symbol={}): {}", symbol, e.getMessage());
+        }
+        return -1;
+    }
+
+    public double getVolatilityIndex(String symbol) {
+        String url = "https://api.bithumb.com/public/ticker/" + symbol.toUpperCase() + "_KRW";
+        try {
+            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            Map<String, String> data = (Map<String, String>) response.get("data");
+            double high = Double.parseDouble(data.get("max_price"));
+            double low = Double.parseDouble(data.get("min_price"));
+            double open = Double.parseDouble(data.get("opening_price"));
+            return (high - low) / open * 100;
+        } catch (Exception e) {
+            logger.error("[Bithumb] 변동성 계산 실패 (symbol={}): {}", symbol, e.getMessage());
+        }
+        return -1;
+    }
 }

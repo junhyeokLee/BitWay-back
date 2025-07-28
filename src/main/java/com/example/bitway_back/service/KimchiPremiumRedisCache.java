@@ -25,10 +25,13 @@ public class KimchiPremiumRedisCache {
 
     private boolean hasChanged(KimchiPremiumDto oldVal, KimchiPremiumDto newVal) {
         if (oldVal == null) return true;
-        return !Objects.equals(oldVal.getDomesticPrice(), newVal.getDomesticPrice()) ||
-               !Objects.equals(oldVal.getOverseasPrice(), newVal.getOverseasPrice()) ||
-               !Objects.equals(oldVal.getExchangeRate(), newVal.getExchangeRate()) ||
-               !Objects.equals(oldVal.getPremiumRate(), newVal.getPremiumRate());
+        return !Objects.equals(oldVal.getDomesticPrice(), newVal.getDomesticPrice())
+               || !Objects.equals(oldVal.getOverseasPrice(), newVal.getOverseasPrice())
+               || !Objects.equals(oldVal.getExchangeRate(), newVal.getExchangeRate())
+               || !Objects.equals(oldVal.getPremiumRate(), newVal.getPremiumRate())
+               || !Objects.equals(oldVal.getPriceChangePercent24h(), newVal.getPriceChangePercent24h())
+               || !Objects.equals(oldVal.getVolume24h(), newVal.getVolume24h())
+               || !Objects.equals(oldVal.getVolatilityIndex(), newVal.getVolatilityIndex());
     }
 
     public void put(KimchiPremiumDto dto) {
@@ -94,6 +97,8 @@ public class KimchiPremiumRedisCache {
             boolean isFavorite = favorites.contains(symbol.toUpperCase());
             double domesticPrice = baseDto.getDomesticPrice();
             double overseasPriceUsd = baseDto.getOverseasPrice();
+
+
             // Use KimchiPremiumCalculator to generate the DTO
             result.add(calculate(
                 symbol,
@@ -103,6 +108,9 @@ public class KimchiPremiumRedisCache {
                 domestic,
                 overseas,
                 isFavorite,
+                baseDto.getPriceChangePercent24h(),
+                baseDto.getVolume24h(),
+                baseDto.getVolatilityIndex(),
                 coinLogos
             ));
         }

@@ -19,31 +19,31 @@ public class KimchiPremiumService {
     private final Map<String, ExchangePriceService> exchangeServices;
     private final FavoriteService favoriteService;
 
-    public KimchiPremiumDto compare(String symbol, String domestic, String overseas) {
-
-        ExchangePriceService domesticService = exchangeServices.get(domestic.toLowerCase(Locale.ROOT));
-        ExchangePriceService overseasService = exchangeServices.get(overseas.toLowerCase(Locale.ROOT));
-
-        if (domesticService == null || overseasService == null) {
-            throw new IllegalArgumentException("지원하지 않는 거래소: " + domestic + " 또는 " + overseas);
-        }
-
-        double domesticPrice = domesticService.getPriceKrw(symbol);
-        double overseasPriceUsd = overseasService.getPriceUsd(symbol);
-        double exchangeRate = exchangeRateService.getUsdToKrwRate();
-        List<CoinLogo> coinLogos = coinLogoService.getLogos();
-
-        return KimchiPremiumCalculator.calculate(
-            symbol,
-            domesticPrice,
-            overseasPriceUsd,
-            exchangeRate,
-            domestic,
-            overseas,
-            false,
-            coinLogos
-        );
-    }
+//    public KimchiPremiumDto compare(String symbol, String domestic, String overseas) {
+//
+//        ExchangePriceService domesticService = exchangeServices.get(domestic.toLowerCase(Locale.ROOT));
+//        ExchangePriceService overseasService = exchangeServices.get(overseas.toLowerCase(Locale.ROOT));
+//
+//        if (domesticService == null || overseasService == null) {
+//            throw new IllegalArgumentException("지원하지 않는 거래소: " + domestic + " 또는 " + overseas);
+//        }
+//
+//        double domesticPrice = domesticService.getPriceKrw(symbol);
+//        double overseasPriceUsd = overseasService.getPriceUsd(symbol);
+//        double exchangeRate = exchangeRateService.getUsdToKrwRate();
+//        List<CoinLogo> coinLogos = coinLogoService.getLogos();
+//
+//        return KimchiPremiumCalculator.calculate(
+//            symbol,
+//            domesticPrice,
+//            overseasPriceUsd,
+//            exchangeRate,
+//            domestic,
+//            overseas,
+//            false,
+//            coinLogos
+//        );
+//    }
 
     public List<KimchiPremiumDto> getAllPremiums(String userId, String domestic, String overseas,String sortBy) {
         ExchangePriceService exchange = exchangeServices.get(domestic.toLowerCase(Locale.ROOT));
@@ -75,6 +75,11 @@ public class KimchiPremiumService {
             double overseasPriceUsd = overseasPrices.get(symbol);
             boolean isFavorite = favorites.contains(symbol.toUpperCase(Locale.ROOT));
 
+            // 새로 추가된 데이터 (priceChangePercent24h, volume24h, volatilityIndex)
+            double priceChangePercent24h = overseasService.getPriceChangePercent24h(symbol);
+            double volume24h = overseasService.getVolume24h(symbol);
+            double volatilityIndex = overseasService.getVolatilityIndex(symbol);
+
             result.add(KimchiPremiumCalculator.calculate(
                 symbol,
                 domesticPrice,
@@ -83,6 +88,9 @@ public class KimchiPremiumService {
                 domestic,
                 overseas,
                 isFavorite,
+                priceChangePercent24h,
+                volume24h,
+                volatilityIndex,
                 coinLogos
             ));
         }

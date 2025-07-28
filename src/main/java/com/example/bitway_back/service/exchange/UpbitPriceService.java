@@ -82,4 +82,49 @@ public class UpbitPriceService implements ExchangePriceService {
         throw new UnsupportedOperationException("Upbit는 USD 가격을 지원하지 않습니다.");
     }
 
+    public double getPriceChangePercent24h(String symbol) {
+        String market = "KRW-" + symbol.toUpperCase();
+        String url = "https://api.upbit.com/v1/ticker?markets=" + market;
+        try {
+            Map<String, Object>[] response = restTemplate.getForObject(url, Map[].class);
+            if (response != null && response.length > 0 && response[0].get("signed_change_rate") instanceof Number) {
+                return ((Number) response[0].get("signed_change_rate")).doubleValue() * 100;
+            }
+        } catch (Exception e) {
+            logger.error("[Upbit] 24시간 변동률 조회 실패 (symbol={}): {}", symbol, e.getMessage());
+        }
+        return -1;
+    }
+
+    public double getVolume24h(String symbol) {
+        String market = "KRW-" + symbol.toUpperCase();
+        String url = "https://api.upbit.com/v1/ticker?markets=" + market;
+        try {
+            Map<String, Object>[] response = restTemplate.getForObject(url, Map[].class);
+            if (response != null && response.length > 0 && response[0].get("acc_trade_price_24h") instanceof Number) {
+                return ((Number) response[0].get("acc_trade_price_24h")).doubleValue();
+            }
+        } catch (Exception e) {
+            logger.error("[Upbit] 24시간 거래대금 조회 실패 (symbol={}): {}", symbol, e.getMessage());
+        }
+        return -1;
+    }
+
+    public double getVolatilityIndex(String symbol) {
+        String market = "KRW-" + symbol.toUpperCase();
+        String url = "https://api.upbit.com/v1/ticker?markets=" + market;
+        try {
+            Map<String, Object>[] response = restTemplate.getForObject(url, Map[].class);
+            if (response != null && response.length > 0) {
+                double high = ((Number) response[0].get("high_price")).doubleValue();
+                double low = ((Number) response[0].get("low_price")).doubleValue();
+                double open = ((Number) response[0].get("opening_price")).doubleValue();
+                return (high - low) / open * 100;
+            }
+        } catch (Exception e) {
+            logger.error("[Upbit] 변동성 지표 계산 실패 (symbol={}): {}", symbol, e.getMessage());
+        }
+        return -1;
+    }
+
 }

@@ -18,7 +18,11 @@ public class KimchiPremiumCalculator {
             String domesticExchange,
             String overseasExchange,
             boolean isFavorite,
+            double priceChangePercent24h,
+            double volume24h,
+            double volatilityIndex,
             List<CoinLogo> coinLogos
+
     ) {
         double overseasPriceKrw = overseasPriceUsd * exchangeRate;
         double priceGap = domesticPrice - overseasPriceKrw;
@@ -48,6 +52,9 @@ public class KimchiPremiumCalculator {
                 .priceGap(priceGap)
                 .imageUrl(logoInfo.getOrDefault("imageUrl", ""))
                 .symbolName(logoInfo.getOrDefault("symbolName", ""))
+                .priceChangePercent24h(priceChangePercent24h)
+                .volume24h(volume24h)
+                .volatilityIndex(volatilityIndex)
                 .isFavorite(isFavorite)
                 .sortPriority(sortPriority)
                 .build();

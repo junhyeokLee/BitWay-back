@@ -25,7 +25,7 @@ public class SwaggerConfig {
                         .in(SecurityScheme.In.HEADER)
                         .name("Authorization"));
 
-        // ✅ 서버 URL을 명시적으로 지정 (HTTPS)
+        // 서버 URL을 명시적으로 지정 (HTTPS)
         Server server = new Server();
         server.setUrl("https://bitway-back-production.up.railway.app");
         server.setDescription("배포 서버");

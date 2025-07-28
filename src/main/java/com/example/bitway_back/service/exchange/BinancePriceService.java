@@ -42,10 +42,13 @@ public class BinancePriceService implements ExchangePriceService {
             if (response == null) return Map.of();
 
             return response.stream()
-                .filter(item -> item.get("symbol").endsWith("USDT"))
+                .filter(t -> {
+                    String symbol = (String) t.get("symbol");
+                    return symbol != null && symbol.endsWith("USDT") && t.get("price") != null;
+                })
                 .collect(Collectors.toMap(
-                    item -> item.get("symbol").replace("USDT", ""),
-                    item -> Double.parseDouble(item.get("price"))
+                    t -> ((String) t.get("symbol")).replace("USDT", ""),
+                    t -> Double.parseDouble((String) t.get("price"))
                 ));
         } catch (Exception e) {
             System.out.println("🔥 Binance 전체 가격 조회 실패: " + e.getMessage());
@@ -57,6 +60,45 @@ public class BinancePriceService implements ExchangePriceService {
     @Override
     public double getPriceKrw(String symbol) {
         throw new UnsupportedOperationException("Binance는 KRW 가격 미지원");
+    }
+
+    public double getPriceChangePercent24h(String symbol) {
+        String pair = symbol.toUpperCase() + "USDT";
+        String url = "https://api.binance.com/api/v3/ticker/24hr?symbol=" + pair;
+        try {
+            Map<?, ?> response = restTemplate.getForObject(url, Map.class);
+            return Double.parseDouble(response.get("priceChangePercent").toString());
+        } catch (Exception e) {
+            System.out.println("🔥 Binance 변동률 조회 실패: " + e.getMessage());
+        }
+        return -1;
+    }
+
+    public double getVolume24h(String symbol) {
+        String pair = symbol.toUpperCase() + "USDT";
+        String url = "https://api.binance.com/api/v3/ticker/24hr?symbol=" + pair;
+        try {
+            Map<?, ?> response = restTemplate.getForObject(url, Map.class);
+            return Double.parseDouble(response.get("quoteVolume").toString());
+        } catch (Exception e) {
+            System.out.println("🔥 Binance 거래대금 조회 실패: " + e.getMessage());
+        }
+        return -1;
+    }
+
+    public double getVolatilityIndex(String symbol) {
+        String pair = symbol.toUpperCase() + "USDT";
+        String url = "https://api.binance.com/api/v3/ticker/24hr?symbol=" + pair;
+        try {
+            Map<?, ?> response = restTemplate.getForObject(url, Map.class);
+            double high = Double.parseDouble(response.get("highPrice").toString());
+            double low = Double.parseDouble(response.get("lowPrice").toString());
+            double open = Double.parseDouble(response.get("openPrice").toString());
+            return (high - low) / open * 100;
+        } catch (Exception e) {
+            System.out.println("🔥 Binance 변동성 계산 실패: " + e.getMessage());
+        }
+        return -1;
     }
 
 }
