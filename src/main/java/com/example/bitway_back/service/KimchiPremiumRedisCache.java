@@ -131,36 +131,36 @@ public class KimchiPremiumRedisCache {
             redisTemplate.delete(keys);
         }
     }
-    @PostConstruct
-    public void testRedisConnection() {
-        try {
-            String testKey = PREFIX + "test";
-            KimchiPremiumDto testDto = KimchiPremiumDto.builder()
-                    .symbol("TEST")
-                    .symbolName("테스트코인")
-                    .domesticExchange("upbit")
-                    .domesticPrice(100000)
-                    .overseasExchange("binance")
-                    .overseasPrice(70.0)
-                    .exchangeRate(1400.0)
-                    .premiumRate(1.5)
-                    .overseasPriceInKrw(98000)
-                    .priceGap(2000)
-                    .imageUrl("https://example.com/test.png")
-                    .sortPriority(1)
-                    .isFavorite(false)
-                    .build();
-
-            redisTemplate.opsForValue().set(testKey, testDto, Duration.ofMinutes(1));
-            KimchiPremiumDto retrieved = redisTemplate.opsForValue().get(testKey);
-
-            if (retrieved != null) {
-                System.out.println("✅ Redis 연결 테스트 성공: " + retrieved.getSymbolName());
-            } else {
-                System.err.println("❌ Redis 연결 실패 또는 값 조회 실패");
-            }
-        } catch (Exception e) {
-            System.err.println("❌ Redis 연결 중 예외 발생: " + e.getMessage());
-        }
-    }
+//    @PostConstruct
+//    public void testRedisConnection() {
+//        try {
+//            String testKey = PREFIX + "test";
+//            KimchiPremiumDto testDto = KimchiPremiumDto.builder()
+//                    .symbol("TEST")
+//                    .symbolName("테스트코인")
+//                    .domesticExchange("upbit")
+//                    .domesticPrice(100000)
+//                    .overseasExchange("binance")
+//                    .overseasPrice(70.0)
+//                    .exchangeRate(1400.0)
+//                    .premiumRate(1.5)
+//                    .overseasPriceInKrw(98000)
+//                    .priceGap(2000)
+//                    .imageUrl("https://example.com/test.png")
+//                    .sortPriority(1)
+//                    .isFavorite(false)
+//                    .build();
+//
+//            redisTemplate.opsForValue().set(testKey, testDto, Duration.ofMinutes(1));
+//            KimchiPremiumDto retrieved = redisTemplate.opsForValue().get(testKey);
+//
+//            if (retrieved != null) {
+//                System.out.println("✅ Redis 연결 테스트 성공: " + retrieved.getSymbolName());
+//            } else {
+//                System.err.println("❌ Redis 연결 실패 또는 값 조회 실패");
+//            }
+//        } catch (Exception e) {
+//            System.err.println("❌ Redis 연결 중 예외 발생: " + e.getMessage());
+//        }
+//    }
 }
