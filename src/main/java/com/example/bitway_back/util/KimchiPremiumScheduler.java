@@ -20,8 +20,15 @@ public class KimchiPremiumScheduler {
 
     @Scheduled(fixedRate = 5000) // 5초마다 캐시 업데이트
     public void updateRedisCache() {
-        List<KimchiPremiumDto> list = kimchiPremiumService.getAllPremiums(null, "upbit", "binance", "kimp_desc");
-        list.forEach(dto -> cache.put(dto));
-        log.info("김프 캐시 갱신 완료: {}개", list.size());
+        String[] domesticExchanges = {"upbit", "bithumb"};
+        String[] overseasExchanges = {"binance", "bybit"};
+
+        for (String domestic : domesticExchanges) {
+            for (String overseas : overseasExchanges) {
+                List<KimchiPremiumDto> list = kimchiPremiumService.getAllPremiums(null, domestic, overseas, "kimp_desc");
+                list.forEach(dto -> cache.put(dto));
+                log.info("김프 캐시 갱신 완료: {} → {} : {}개", domestic, overseas, list.size());
+            }
+        }
     }
 }

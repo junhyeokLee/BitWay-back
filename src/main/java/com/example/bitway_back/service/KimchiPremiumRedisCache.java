@@ -1,5 +1,4 @@
 package com.example.bitway_back.service;
-import jakarta.annotation.PostConstruct;
 import com.example.bitway_back.dto.coin.KimchiPremiumDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -98,8 +97,6 @@ public class KimchiPremiumRedisCache {
             double domesticPrice = baseDto.getDomesticPrice();
             double overseasPriceUsd = baseDto.getOverseasPrice();
 
-
-            // Use KimchiPremiumCalculator to generate the DTO
             result.add(calculate(
                 symbol,
                 domesticPrice,

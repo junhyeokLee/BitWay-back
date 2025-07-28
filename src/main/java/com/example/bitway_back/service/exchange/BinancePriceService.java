@@ -1,5 +1,7 @@
 package com.example.bitway_back.service.exchange;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -9,22 +11,22 @@ import java.util.stream.Collectors;
 
 @Service("binance")
 public class BinancePriceService implements ExchangePriceService {
-
+    private static final Logger logger = LoggerFactory.getLogger(BinancePriceService.class);
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
     public double getPriceUsd(String symbol) {
-        String pair = symbol.toUpperCase() + "USDT";  // ex: BTCUSDT
-        String url = "https://api.binance.com/api/v3/ticker/price?symbol=" + pair;
-
-        try {
-            Map<?, ?> response = restTemplate.getForObject(url, Map.class);
-            if (response != null && response.get("price") != null) {
-                return Double.parseDouble(response.get("price").toString());
-            }
-        } catch (Exception e) {
-            System.out.println("🔥 Binance 호출 실패: " + e.getMessage());
-        }
+//        String pair = symbol.toUpperCase() + "USDT";  // ex: BTCUSDT
+//        String url = "https://api.binance.com/api/v3/ticker/price?symbol=" + pair;
+//
+//        try {
+//            Map<?, ?> response = restTemplate.getForObject(url, Map.class);
+//            if (response != null && response.get("price") != null) {
+//                return Double.parseDouble(response.get("price").toString());
+//            }
+//        } catch (Exception e) {
+//            System.out.println("🔥 Binance 호출 실패: " + e.getMessage());
+//        }
 
         return -1; // 실패 시 -1 반환
     }
@@ -36,6 +38,7 @@ public class BinancePriceService implements ExchangePriceService {
 
     @Override
     public Map<String, Double> getAllPricesUsd() {
+        logger.info("[Binance] getAllPricesUsd() 메서드 진입");
         String url = "https://api.binance.com/api/v3/ticker/price";
         try {
             List<Map<String, String>> response = restTemplate.getForObject(url, List.class);

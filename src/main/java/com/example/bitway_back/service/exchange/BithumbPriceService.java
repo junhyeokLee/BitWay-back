@@ -31,8 +31,18 @@ public class BithumbPriceService implements ExchangePriceService {
     public Map<String, Double> getAllPricesKrw() {
         try {
             String url = "https://api.bithumb.com/public/ticker/ALL_KRW";
+            logger.info("[Bithumb] 전체 가격 조회 요청: {}", url);
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
             Map<String, Map<String, String>> data = (Map<String, Map<String, String>>) response.get("data");
+
+            if (data == null) {
+                logger.warn("[Bithumb] data 필드가 null입니다.");
+                return Map.of();
+            }
+
+            logger.info("[Bithumb] 전체 코인 수신 완료: {}개", data.size());
+            logger.info("[Bithumb] 예시 데이터 (BTC): {}", data.get("BTC"));
+
             return data.entrySet().stream()
                     .filter(e -> !"date".equalsIgnoreCase(e.getKey()))
                     .collect(Collectors.toMap(
