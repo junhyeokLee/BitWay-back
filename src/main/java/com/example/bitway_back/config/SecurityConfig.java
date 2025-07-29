@@ -51,14 +51,7 @@ public class SecurityConfig {
 //                .anyRequest().authenticated());
 
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                        "/users/register",
-                        "/users/login",
-                        "/favicon.ico",
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**"
-                ).permitAll()
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
         );
 
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
