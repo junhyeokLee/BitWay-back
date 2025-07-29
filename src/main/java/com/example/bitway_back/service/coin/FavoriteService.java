@@ -6,7 +6,7 @@ import com.example.bitway_back.dto.request.FavoriteCoinReqDto;
 import com.example.bitway_back.dto.response.FavoriteResDto;
 import com.example.bitway_back.exception.CustomException;
 import com.example.bitway_back.exception.ErrorCode;
-import com.example.bitway_back.repository.FavoriteCoinRepository;
+import com.example.bitway_back.repository.coin.FavoriteCoinRepository;
 import com.example.bitway_back.util.SecurityUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

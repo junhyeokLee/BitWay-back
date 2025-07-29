@@ -1,4 +1,4 @@
-package com.example.bitway_back.repository;
+package com.example.bitway_back.repository.coin;
 
 import com.example.bitway_back.domain.coin.CoinLogo;
 import org.springframework.data.jpa.repository.JpaRepository;
