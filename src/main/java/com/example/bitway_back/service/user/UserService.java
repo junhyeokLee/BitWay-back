@@ -18,6 +18,9 @@ public class UserService {
     private final BCryptPasswordEncoder passwordEncoder;
 
     public void register(UserRegisterReqDto request) {
+
+        System.out.println("회원가입 요청 들어옴: " + request.getEmail());
+
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("이미 존재하는 아이디입니다.");
         }
@@ -38,5 +41,9 @@ public class UserService {
 
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
+    }
+
+    public Iterable<User> findAllUsers() {
+        return userRepository.findAll();
     }
 }

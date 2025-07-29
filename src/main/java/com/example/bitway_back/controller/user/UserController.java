@@ -30,4 +30,10 @@ public class UserController {
         return userService.findById(userId)
                 .orElseThrow(() -> new RuntimeException("해당 사용자가 존재하지 않습니다."));
     }
+
+    @Operation(summary = "모든 사용자 조회 API")
+    @GetMapping
+    public ResponseEntity<?> getAllUsers() {
+        return ResponseEntity.ok(userService.findAllUsers());
+    }
 }

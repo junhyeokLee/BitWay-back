@@ -44,10 +44,22 @@ public class SecurityConfig {
                 .csrf(CsrfConfigurer::disable)
                 .cors(config -> config.configurationSource(corsConfigurationSource()));
 
-        http.authorizeHttpRequests(request -> request
-                .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
-                .requestMatchers("/", "/api/**", "/api/auth/login", "/api/auth/logout", "/api/auth/reissue", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .anyRequest().authenticated());
+        // 원래설정
+//        http.authorizeHttpRequests(request -> request
+//                .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
+//                .requestMatchers("/", "/api/**", "/api/auth/login", "/api/auth/logout", "/api/auth/reissue", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+//                .anyRequest().authenticated());
+
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                        "/users/register",
+                        "/users/login",
+                        "/favicon.ico",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**"
+                ).permitAll()
+                .anyRequest().authenticated()
+        );
 
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
