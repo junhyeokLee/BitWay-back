@@ -55,8 +55,8 @@ public class JwtUtil {
     }
 
     // Access Token 생성
-    public String createAccessToken(String uuid, List<String> authorities) {
-        Claims claims = Jwts.claims().setSubject(uuid);
+    public String createAccessToken(String email, List<String> authorities) {
+        Claims claims = Jwts.claims().setSubject(email);
         claims.put("auth", authorities);
 
         Date now = new Date();
@@ -70,8 +70,8 @@ public class JwtUtil {
     }
 
     // Refresh Token 생성
-    public String createRefreshToken(String uuid, List<String> authorities, String userId) {
-        Claims claims = Jwts.claims().setSubject(uuid);
+    public String createRefreshToken(String id, List<String> authorities, String userId) {
+        Claims claims = Jwts.claims().setSubject(id);
         claims.put("auth", authorities);
         claims.put("userId", userId);
 

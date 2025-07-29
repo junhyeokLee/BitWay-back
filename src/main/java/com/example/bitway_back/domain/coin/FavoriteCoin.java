@@ -1,6 +1,7 @@
 package com.example.bitway_back.domain.coin;
 
 import com.example.bitway_back.domain.user.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,6 +17,8 @@ public class FavoriteCoin {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id") // Optional but explicit
+    @JsonIgnore
     private User user;
 
     @Column(nullable = false)
@@ -23,5 +26,14 @@ public class FavoriteCoin {
 
     @Column(nullable = false)
     private String symbolName; // 예: 비트코인, 이더리움
+
+    @Column(name = "alert_enabled")
+    private Boolean alertEnabled;
+
+    @Column(name = "alert_price")
+    private Double alertPrice;
+
+    @Column(nullable = false)
+    private Boolean enabled;
 
 }

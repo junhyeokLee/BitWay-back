@@ -19,14 +19,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String uuid) throws UsernameNotFoundException {
-        // User Mapping 정보
-        UserMapping userMapping = userMappingRepository.findByUuid(uuid).orElseThrow(
-                () -> new BadCredentialsException(ErrorCode.BAD_CREDENTIALS.getMsg()));
-
-        User user = userRepository.findById(userMapping.getUserId()).orElseThrow(
-                () -> new BadCredentialsException(ErrorCode.BAD_CREDENTIALS.getMsg()));
-
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadCredentialsException(ErrorCode.BAD_CREDENTIALS.getMsg()));
         return new UserDetailsImpl(user);
     }
 }

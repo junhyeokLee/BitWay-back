@@ -6,6 +6,9 @@ import java.util.List;
 
 @Data
 public class FavoriteCoinReqDto {
-    private Long userId;
+    private String email;
     private List<String> symbols;
+    private Boolean alertEnabled;
+    private Double alertPrice;
+    private Boolean enabled;
 }

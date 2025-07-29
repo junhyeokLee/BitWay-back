@@ -3,6 +3,7 @@ package com.example.bitway_back.service.coin;
 import com.example.bitway_back.domain.coin.FavoriteCoin;
 import com.example.bitway_back.domain.user.User;
 import com.example.bitway_back.dto.request.FavoriteCoinReqDto;
+import com.example.bitway_back.dto.response.FavoriteResDto;
 import com.example.bitway_back.exception.CustomException;
 import com.example.bitway_back.exception.ErrorCode;
 import com.example.bitway_back.repository.FavoriteCoinRepository;
@@ -19,15 +20,28 @@ public class FavoriteService {
 
     private final FavoriteCoinRepository favoriteRepo;
 
-    public List<FavoriteCoin> getFavorites() {
+//    public List<FavoriteCoin> getFavorites() {
+//        User user = SecurityUtil.getCurrentUser()
+//                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED_REQUEST));
+//        return favoriteRepo.findByUser(user);
+//    }
+
+    public List<FavoriteResDto> getFavorites() {
         User user = SecurityUtil.getCurrentUser()
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED_REQUEST));
-        return favoriteRepo.findByUser(user);
+
+        return favoriteRepo.findByUser(user).stream()
+                .map(f -> new FavoriteResDto(
+                        f.getId(),
+                        f.getSymbol(),
+                        f.getAlertEnabled(),
+                        f.getAlertPrice(),
+                        f.getEnabled()
+                )).toList();
     }
 
     @Transactional
     public void setFavoriteCoins(FavoriteCoinReqDto request) {
-        Long userId = request.getUserId();
         List<String> symbols = request.getSymbols();
 
         if (symbols == null || symbols.isEmpty()) {
@@ -43,6 +57,9 @@ public class FavoriteService {
                 FavoriteCoin favorite = FavoriteCoin.builder()
                         .user(user)
                         .symbol(symbol)
+                        .alertEnabled(request.getAlertEnabled() != null ? request.getAlertEnabled() : false)
+                        .alertPrice(request.getAlertPrice())
+                        .enabled(request.getEnabled() != null ? request.getEnabled() : true)
                         .build();
                 favoriteRepo.save(favorite);
             }
