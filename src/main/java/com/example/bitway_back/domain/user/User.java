@@ -2,6 +2,8 @@ package com.example.bitway_back.domain.user;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,26 +16,29 @@ import java.time.LocalDateTime;
 @Builder
 @Table(name = "bitway_user") // user → app_user 등으로 변경
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String userId;
+    @Column(nullable = false)
+    private String password; // 암호화 저장
 
-    private String userName;
-
-    private String userDuty;
-
-    private String authority;
-
-    private LocalDate registrationDate;
-
-    private String phoneNumber;
-
-    private String password;
+    @Column(nullable = false, unique = true)
+    private String email;
 
     @Column(nullable = false)
-    private LocalDateTime createdDateTime;
+    private String phoneNumber;
+
+    @Column(nullable = false, unique = true)
+    private String nickname;
+
+    @Builder.Default
+    private boolean isDeleted = false;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
 }

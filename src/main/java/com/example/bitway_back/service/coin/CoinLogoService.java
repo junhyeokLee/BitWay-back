@@ -1,4 +1,4 @@
-package com.example.bitway_back.service;
+package com.example.bitway_back.service.coin;
 
 import com.example.bitway_back.domain.coin.CoinLogo;
 import com.example.bitway_back.repository.CoinLogoRepository;

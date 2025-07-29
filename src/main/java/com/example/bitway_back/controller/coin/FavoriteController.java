@@ -1,10 +1,12 @@
-package com.example.bitway_back.controller;
-import com.example.bitway_back.dto.coin.FavoriteDto;
+package com.example.bitway_back.controller.coin;
+import com.example.bitway_back.dto.request.FavoriteCoinReqDto;
+import com.example.bitway_back.dto.response.FavoriteDto;
 import com.example.bitway_back.domain.coin.FavoriteCoin;
-import com.example.bitway_back.service.FavoriteService;
+import com.example.bitway_back.service.coin.FavoriteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,9 +26,10 @@ public class FavoriteController {
     }
 
     @Operation(summary = "즐겨찾기 추가 API")
-    @PostMapping
-    public FavoriteCoin add(@RequestBody FavoriteDto dto) {
-        return favoriteService.addFavorite(dto);
+    @PostMapping("/favorite")
+    public ResponseEntity<Void> setFavoriteCoins(@RequestBody FavoriteCoinReqDto request) {
+        favoriteService.setFavoriteCoins(request);
+        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "즐겨찾기 삭제 API")

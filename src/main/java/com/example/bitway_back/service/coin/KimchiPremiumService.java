@@ -1,8 +1,9 @@
-package com.example.bitway_back.service;
+package com.example.bitway_back.service.coin;
 
 import com.example.bitway_back.domain.coin.CoinLogo;
-import com.example.bitway_back.dto.coin.KimchiPremiumDto;
+import com.example.bitway_back.dto.response.KimchiPremiumDto;
 import com.example.bitway_back.service.exchange.ExchangePriceService;
+import com.example.bitway_back.service.exchange.ExchangeRateService;
 import com.example.bitway_back.util.KimchiPremiumCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,15 +33,12 @@ public class KimchiPremiumService {
         Map<String, Double> overseasPrices = overseasService.getAllPricesUsd();
         Map<String, Double> domesticPrices = exchange.getAllPricesKrw(); // e.g., BTC → 1000만 원
 
-        System.out.println("Domestic size: " + domesticPrices.size());
-        System.out.println("Overseas size: " + overseasPrices.size());
-
         double exchangeRate = exchangeRateService.getUsdToKrwRate();
         List<CoinLogo> coinLogos = coinLogoService.getLogos();
 
         Set<String> favorites = userId != null && !userId.isBlank()
                 ? favoriteService.getFavorites().stream()
-                .map(fav -> fav.getCoinCode().toUpperCase(Locale.ROOT))
+                .map(fav -> fav.getSymbol().toUpperCase(Locale.ROOT))
                 .collect(Collectors.toSet())
                 : Set.of(); // 비로그인 사용자면 빈 Set
 

@@ -1,6 +1,6 @@
-package com.example.bitway_back.controller;
+package com.example.bitway_back.controller.coin;
 
-import com.example.bitway_back.service.UpbitService;
+import com.example.bitway_back.service.coin.UpbitService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

@@ -1,12 +1,13 @@
-package com.example.bitway_back.service;
+package com.example.bitway_back.service.coin;
 
 import com.example.bitway_back.domain.coin.FavoriteCoin;
 import com.example.bitway_back.domain.user.User;
-import com.example.bitway_back.dto.coin.FavoriteDto;
+import com.example.bitway_back.dto.request.FavoriteCoinReqDto;
 import com.example.bitway_back.exception.CustomException;
 import com.example.bitway_back.exception.ErrorCode;
 import com.example.bitway_back.repository.FavoriteCoinRepository;
 import com.example.bitway_back.util.SecurityUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,17 +25,30 @@ public class FavoriteService {
         return favoriteRepo.findByUser(user);
     }
 
-    public FavoriteCoin addFavorite(FavoriteDto dto) {
+    @Transactional
+    public void setFavoriteCoins(FavoriteCoinReqDto request) {
+        Long userId = request.getUserId();
+        List<String> symbols = request.getSymbols();
+
+        if (symbols == null || symbols.isEmpty()) {
+            throw new IllegalArgumentException("관심 코인을 1개 이상 선택해야 합니다.");
+        }
+
         User user = SecurityUtil.getCurrentUser()
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED_REQUEST));
 
-        FavoriteCoin favorite = new FavoriteCoin();
-        favorite.setCoinCode(dto.getCoinCode());
-        favorite.setCoinName(dto.getCoinName());
-        favorite.setUser(user);
-
-        return favoriteRepo.save(favorite);
+        for (String symbol : symbols) {
+            boolean exists = favoriteRepo.existsByUserAndSymbol(user, symbol);
+            if (!exists) {
+                FavoriteCoin favorite = FavoriteCoin.builder()
+                        .user(user)
+                        .symbol(symbol)
+                        .build();
+                favoriteRepo.save(favorite);
+            }
+        }
     }
+
     public void removeFavorite(Long id) {
         favoriteRepo.deleteById(id);
     }

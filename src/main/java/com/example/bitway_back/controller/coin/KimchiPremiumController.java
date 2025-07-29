@@ -1,7 +1,7 @@
-package com.example.bitway_back.controller;
+package com.example.bitway_back.controller.coin;
 
-import com.example.bitway_back.dto.coin.KimchiPremiumDto;
-import com.example.bitway_back.service.KimchiPremiumRedisCache;
+import com.example.bitway_back.dto.response.KimchiPremiumDto;
+import com.example.bitway_back.service.coin.KimchiPremiumRedisCache;
 import com.example.bitway_back.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

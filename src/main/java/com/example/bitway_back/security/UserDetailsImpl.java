@@ -22,7 +22,7 @@ public record UserDetailsImpl(User user) implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.user().getUserId();
+        return this.user().getEmail();
     }
 
     @Override

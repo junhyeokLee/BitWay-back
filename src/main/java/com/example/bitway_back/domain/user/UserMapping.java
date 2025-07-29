@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class UserMapping {
 
     @Id
-    private String userId;
+    private Long userId;
 
     @Column(nullable = false, length = 36)
     private String uuid;
@@ -26,7 +26,7 @@ public class UserMapping {
     private LocalDateTime createdDateTime;
 
     @Builder
-    public UserMapping(String userId, String uuid, LocalDateTime createdDateTime) {
+    public UserMapping(Long userId, String uuid, LocalDateTime createdDateTime) {
         this.userId = userId;
         this.uuid = uuid;
         this.createdDateTime = createdDateTime;

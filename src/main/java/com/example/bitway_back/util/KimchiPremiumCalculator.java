@@ -1,7 +1,7 @@
 package com.example.bitway_back.util;
 
 import com.example.bitway_back.domain.coin.CoinLogo;
-import com.example.bitway_back.dto.coin.KimchiPremiumDto;
+import com.example.bitway_back.dto.response.KimchiPremiumDto;
 
 import java.util.HashMap;
 import java.util.List;

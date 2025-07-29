@@ -1,4 +1,4 @@
-package com.example.bitway_back.dto.coin;
+package com.example.bitway_back.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;

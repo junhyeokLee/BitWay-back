@@ -1,5 +1,6 @@
-package com.example.bitway_back.service;
-import com.example.bitway_back.dto.coin.KimchiPremiumDto;
+package com.example.bitway_back.service.coin;
+import com.example.bitway_back.dto.response.KimchiPremiumDto;
+import com.example.bitway_back.service.exchange.ExchangeRateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -79,7 +80,7 @@ public class KimchiPremiumRedisCache {
         // 관심 코인 Set
         Set<String> favorites = userId != null && !userId.isBlank()
                 ? favoriteService.getFavorites().stream()
-                .map(fav -> fav.getCoinCode().toUpperCase())
+                .map(fav -> fav.getSymbol().toUpperCase())
                 .collect(java.util.stream.Collectors.toSet())
                 : java.util.Set.of();
 
@@ -114,7 +115,8 @@ public class KimchiPremiumRedisCache {
         }
 
         result.sort(
-                Comparator.comparingInt(KimchiPremiumDto::getSortPriority)
+                Comparator.comparing(KimchiPremiumDto::isFavorite).reversed()
+                        .thenComparingInt(KimchiPremiumDto::getSortPriority)
                         .thenComparing(sortingComparator(sortBy))
         );
 

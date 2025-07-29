@@ -1,4 +1,4 @@
-package com.example.bitway_back.dto.coin;
+package com.example.bitway_back.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

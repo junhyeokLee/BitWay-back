@@ -1,4 +1,4 @@
-package com.example.bitway_back.service;
+package com.example.bitway_back.service.coin;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
