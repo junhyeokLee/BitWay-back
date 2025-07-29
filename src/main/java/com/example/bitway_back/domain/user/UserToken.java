@@ -17,19 +17,30 @@ import java.time.LocalDateTime;
 public class UserToken {
 
     @Id
-    @Column(nullable = false, length = 36)
-    private String uuid;
-
-    @Column(nullable = false, length = 300)
+    @Column(nullable = false, unique = true)
     private String refreshToken;
 
-    @CreationTimestamp
     @Column(nullable = false)
-    private LocalDateTime createdDateTime;
+    private Long userId;
+
+    @Column(nullable = false)
+    private LocalDateTime expiryDate;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
     @Builder
-    public UserToken(String uuid, String refreshToken) {
-        this.uuid = uuid;
+    public UserToken(String refreshToken, Long userId, LocalDateTime expiryDate) {
         this.refreshToken = refreshToken;
+        this.userId = userId;
+        this.expiryDate = expiryDate;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public void setExpiryDate(LocalDateTime expiryDate) {
+        this.expiryDate = expiryDate;
     }
 }

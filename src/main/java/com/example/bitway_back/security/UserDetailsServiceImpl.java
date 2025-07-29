@@ -1,9 +1,7 @@
 package com.example.bitway_back.security;
 
 import com.example.bitway_back.domain.user.User;
-import com.example.bitway_back.domain.user.UserMapping;
 import com.example.bitway_back.exception.ErrorCode;
-import com.example.bitway_back.repository.user.UserMappingRepository;
 import com.example.bitway_back.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,7 +13,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
-    private final UserMappingRepository userMappingRepository;
     private final UserRepository userRepository;
 
     @Override

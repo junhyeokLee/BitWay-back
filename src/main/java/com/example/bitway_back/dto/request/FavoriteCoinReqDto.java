@@ -9,6 +9,4 @@ public class FavoriteCoinReqDto {
     private String email;
     private List<String> symbols;
     private Boolean alertEnabled;
-    private Double alertPrice;
-    private Boolean enabled;
 }

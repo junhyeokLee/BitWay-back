@@ -34,9 +34,7 @@ public class FavoriteService {
                 .map(f -> new FavoriteResDto(
                         f.getId(),
                         f.getSymbol(),
-                        f.getAlertEnabled(),
-                        f.getAlertPrice(),
-                        f.getEnabled()
+                        f.getAlertEnabled()
                 )).toList();
     }
 
@@ -58,8 +56,6 @@ public class FavoriteService {
                         .user(user)
                         .symbol(symbol)
                         .alertEnabled(request.getAlertEnabled() != null ? request.getAlertEnabled() : false)
-                        .alertPrice(request.getAlertPrice())
-                        .enabled(request.getEnabled() != null ? request.getEnabled() : true)
                         .build();
                 favoriteRepo.save(favorite);
             }

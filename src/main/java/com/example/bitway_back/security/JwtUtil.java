@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.security.Key;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
@@ -61,7 +62,7 @@ public class JwtUtil {
 
         Date now = new Date();
 
-        return PREFIX + Jwts.builder()
+        return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
                 .setExpiration(new Date(now.getTime() + ACCESS_TOKEN_TIME))
@@ -76,18 +77,23 @@ public class JwtUtil {
         claims.put("userId", userId);
 
         Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + REFRESH_TOKEN_TIME);
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + REFRESH_TOKEN_TIME))
+                .setExpiration(expiryDate)
                 .signWith(key, signatureAlgorithm)
                 .compact();
     }
 
+    public LocalDateTime getRefreshTokenExpiryDate() {
+        return LocalDateTime.now().plusHours(12);
+    }
+
     // 인증 객체 생성
     public Authentication getAuthentication(String token) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUuidFromToken(token));
+        UserDetails userDetails = userDetailsService.loadUserByUsername(this.getSubjectFromToken(token));
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 
@@ -102,7 +108,7 @@ public class JwtUtil {
     }
 
     // 토큰에서 사용자 정보 가져오기
-    public String getUuidFromToken(String token) {
+    public String getSubjectFromToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject();
     }
 }

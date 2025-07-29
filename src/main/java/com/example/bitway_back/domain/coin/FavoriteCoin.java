@@ -30,10 +30,4 @@ public class FavoriteCoin {
     @Column(name = "alert_enabled")
     private Boolean alertEnabled;
 
-    @Column(name = "alert_price")
-    private Double alertPrice;
-
-    @Column(nullable = false)
-    private Boolean enabled;
-
 }
