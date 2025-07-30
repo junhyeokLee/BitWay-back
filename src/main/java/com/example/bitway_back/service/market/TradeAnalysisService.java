@@ -2,6 +2,7 @@ package com.example.bitway_back.service.market;
 
 import com.example.bitway_back.dto.response.BinanceAggTradeResDto;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.Duration;
 import java.util.List;
@@ -24,7 +25,6 @@ public class TradeAnalysisService {
                       .add(new TimestampedTrade(trade, System.currentTimeMillis()));
     }
 
-    // Optionally, update processTrade to use addTrade (if you want to keep the old interface)
     public void processTrade(BinanceAggTradeResDto trade) {
         if (trade == null) return;
         addTrade(trade.getSymbol(), trade);
@@ -35,9 +35,7 @@ public class TradeAnalysisService {
     private void analyzeIfNeeded(String symbol) {
         long now = System.currentTimeMillis();
         List<BinanceAggTradeResDto> recentTrades = getRecentTrades(symbol);
-        System.out.println("Number of trades to process: " + recentTrades.size());
         if (!recentTrades.isEmpty()) {
-            System.out.println("Starting to process recent trades for logging...");
             String sym = recentTrades.get(0).getSymbol();
             long startTime = recentTrades.stream().mapToLong(BinanceAggTradeResDto::getTimestamp).min().orElse(now);
             long endTime = recentTrades.stream().mapToLong(BinanceAggTradeResDto::getTimestamp).max().orElse(now);
@@ -105,6 +103,14 @@ public class TradeAnalysisService {
             .filter(entry -> now - entry.receivedAtEpochMs() <= Duration.ofMinutes(5).toMillis())
             .map(TimestampedTrade::trade)
             .toList();
+    }
+
+    @Scheduled(fixedRate = 60_000) // every 1 minute
+    public void cleanupOldTrades() {
+        long cutoff = System.currentTimeMillis() - Duration.ofMinutes(5).toMillis();
+        tradeBufferMap.forEach((symbol, list) ->
+            list.removeIf(t -> t.receivedAtEpochMs() < cutoff)
+        );
     }
 
     public Map<Integer, Long> getTodaySymbolTradeLevelCounts(String symbol) {

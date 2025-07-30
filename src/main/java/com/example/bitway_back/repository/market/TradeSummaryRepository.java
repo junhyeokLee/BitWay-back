@@ -10,5 +10,5 @@ import java.util.List;
 public interface TradeSummaryRepository extends JpaRepository<TradeSummary, Long> {
     Optional<TradeSummary> findBySymbolAndTradeDate(String symbol, LocalDate tradeDate);
     List<TradeSummary> findByTradeDate(LocalDate tradeDate);
-
+    List<TradeSummary> findByTradeDateBefore(LocalDate date);
 }
