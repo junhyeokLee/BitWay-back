@@ -3,48 +3,38 @@ package com.example.bitway_back.service.market;
 import com.example.bitway_back.dto.response.BinanceAggTradeResDto;
 import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.context.annotation.Lazy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.Deque;
-import java.util.ArrayDeque;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
 public class TradeAnalysisService {
-    private static final Logger log = LoggerFactory.getLogger(TradeAnalysisService.class);
+    private final TradeSseService tradeSseService;
 
-    // For per-symbol trade buffering with timestamps
-    private final Map<String, Deque<TimestampedTrade>> tradeBufferMap = new ConcurrentHashMap<>();
-
-    private TradeSseService tradeSseService;
-
-    @Lazy
-    public void setTradeSseService(TradeSseService tradeSseService) {
+    public TradeAnalysisService(TradeSseService tradeSseService) {
         this.tradeSseService = tradeSseService;
     }
+
+    // For per-symbol trade buffering with timestamps
+    private final Map<String, List<TimestampedTrade>> tradeBufferMap = new ConcurrentHashMap<>();
 
     // Record to store trade and when it was received
     public record TimestampedTrade(BinanceAggTradeResDto trade, long receivedAtEpochMs) {}
 
     // Add a trade to the buffer, wrapping with timestamp
     public void addTrade(String symbol, BinanceAggTradeResDto trade) {
-        tradeBufferMap.computeIfAbsent(symbol, k -> new ArrayDeque<>())
-                      .addLast(new TimestampedTrade(trade, System.currentTimeMillis()));
+        tradeBufferMap.computeIfAbsent(symbol, k -> new CopyOnWriteArrayList<>())
+                      .add(new TimestampedTrade(trade, System.currentTimeMillis()));
     }
 
     public void processTrade(BinanceAggTradeResDto trade) {
-        log.info("[TradeAnalysis] Processing trade: {}", trade);
         if (trade == null) return;
         addTrade(trade.getSymbol(), trade);
-        if (tradeSseService != null) {
-            tradeSseService.sendTradeUpdate(trade.getSymbol(), trade);
-        }
+        tradeSseService.broadcastToEmitters(trade.getSymbol(), trade);
         analyzeIfNeeded(trade.getSymbol());
     }
 
@@ -116,22 +106,18 @@ public class TradeAnalysisService {
 //    // Return trades of given symbol within past 5 minutes
     public List<BinanceAggTradeResDto> getRecentTrades(String symbol) {
         long now = System.currentTimeMillis();
-        Deque<TimestampedTrade> deque = (Deque<TimestampedTrade>) tradeBufferMap.getOrDefault(symbol, new ArrayDeque<>());
-        return deque.stream()
+        return tradeBufferMap.getOrDefault(symbol, List.of()).stream()
             .filter(entry -> now - entry.receivedAtEpochMs() <= Duration.ofMinutes(5).toMillis())
             .map(TimestampedTrade::trade)
             .toList();
     }
 
-    @Scheduled(fixedRate = 300_000) // every 5 minute
+    @Scheduled(fixedRate = 300_000) // every 1 minute
     public void cleanupOldTrades() {
         long cutoff = System.currentTimeMillis() - Duration.ofMinutes(5).toMillis();
-        tradeBufferMap.forEach((symbol, list) -> {
-            Deque<TimestampedTrade> deque = (Deque<TimestampedTrade>) list;
-            while (!deque.isEmpty() && deque.peekFirst().receivedAtEpochMs() < cutoff) {
-                deque.pollFirst();
-            }
-        });
+        tradeBufferMap.forEach((symbol, list) ->
+            list.removeIf(t -> t.receivedAtEpochMs() < cutoff)
+        );
     }
 
     public Map<Integer, Long> getTodaySymbolTradeLevelCounts(String symbol) {

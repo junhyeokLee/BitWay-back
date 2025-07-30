@@ -1,3 +1,4 @@
+// TradeSseService.java
 package com.example.bitway_back.service.market;
 
 import com.example.bitway_back.dto.response.BinanceAggTradeResDto;
@@ -24,54 +25,61 @@ public class TradeSseService {
 
     public SseEmitter createEmitter(String symbol) {
         SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1시간 타임아웃
+        try {
+            emitter.send(SseEmitter.event().name("connected").data("connected"));
+        } catch (IOException e) {
+            emitter.completeWithError(e);
+        }
         emitters.computeIfAbsent(symbol, k -> new ArrayList<>()).add(emitter);
 
         emitter.onCompletion(() -> emitters.get(symbol).remove(emitter));
         emitter.onTimeout(() -> emitters.get(symbol).remove(emitter));
         emitter.onError((e) -> emitters.get(symbol).remove(emitter));
 
-        try {
-            emitter.send(SseEmitter.event().name("connected").data("SSE 연결 완료"));
-        } catch (IOException e) {
-            emitter.completeWithError(e);
-        }
-
         return emitter;
     }
 
-    public void sendTradeUpdate(String symbol, BinanceAggTradeResDto trade) {
-        log.info("[SSE] Preparing to send trade update for symbol: {}", symbol);
-        List<SseEmitter> emitterList = emitters.getOrDefault(symbol, List.of());
-        log.info("[SSE] Sending trade update to {} emitters", emitterList.size());
-        for (SseEmitter emitter : emitterList) {
+    @Scheduled(fixedRate = 60_000)
+    public void sendSummaryToEmitters() {
+        emitters.forEach((symbol, emitterList) -> {
             try {
-                emitter.send(SseEmitter.event()
-                        .name("trade")
-                        .data(trade));
-            } catch (IOException e) {
-                emitter.completeWithError(e);
-                // removed emitter during cleanup
+                Map<Integer, Long> levelCounts = tradeAnalysisService.getTodaySymbolTradeLevelCounts(symbol);
+                long whaleBuy = tradeAnalysisService.getWhaleBuyCount(symbol);
+                long whaleSell = tradeAnalysisService.getWhaleSellCount(symbol);
+                boolean volatility = tradeAnalysisService.hasRecentVolatility(symbol, 100_000);
+
+                Map<String, Object> summary = new HashMap<>();
+                summary.put("symbol", symbol);
+                summary.put("levelCounts", levelCounts);
+                summary.put("whaleBuyCount", whaleBuy);
+                summary.put("whaleSellCount", whaleSell);
+                summary.put("volatility", volatility);
+
+                emitterList.forEach(emitter -> {
+                    try {
+                        emitter.send(SseEmitter.event()
+                                .name("summary")
+                                .data(summary));
+                    } catch (IOException e) {
+                        emitter.complete();
+                    }
+                });
+            } catch (Exception e) {
+                log.warn("SSE 전송 오류: {}", e.getMessage());
             }
-        }
+        });
     }
 
-    // 🧹 Emitter 누수 방지를 위한 정리 로직 (1분마다)
-    @Scheduled(fixedRate = 60_000)
-    public void cleanInactiveEmitters() {
-        emitters.forEach((symbol, list) -> {
-            int before = list.size();
-            list.removeIf(emitter -> {
-                try {
-                    emitter.send(SseEmitter.event().name("ping").data("keepalive"));
-                    return false;
-                } catch (IOException e) {
-                    emitter.completeWithError(e);
-                    return true;
-                }
-            });
-            int after = list.size();
-            if (before != after) {
-                log.debug("[SSE] Removed {} inactive emitters for {}", (before - after), symbol);
+    public void broadcastToEmitters(String symbol, BinanceAggTradeResDto trade) {
+        List<SseEmitter> emitterList = emitters.getOrDefault(symbol, List.of());
+
+        emitterList.forEach(emitter -> {
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("realtime")
+                        .data(trade));
+            } catch (IOException e) {
+                emitter.complete();
             }
         });
     }
