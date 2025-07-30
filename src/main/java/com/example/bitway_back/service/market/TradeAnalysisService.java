@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 public class TradeAnalysisService {
     // For per-symbol trade buffering with timestamps
     private final Map<String, List<TimestampedTrade>> tradeBufferMap = new ConcurrentHashMap<>();
-    private final Map<Integer, List<BinanceAggTradeResDto>> tradeLevelMap = new ConcurrentHashMap<>();
 
     // Record to store trade and when it was received
     public record TimestampedTrade(BinanceAggTradeResDto trade, long receivedAtEpochMs) {}
@@ -29,8 +28,6 @@ public class TradeAnalysisService {
     public void processTrade(BinanceAggTradeResDto trade) {
         if (trade == null) return;
         addTrade(trade.getSymbol(), trade);
-        int level = classifyTradeLevel(trade);
-        tradeLevelMap.computeIfAbsent(level, k -> new CopyOnWriteArrayList<>()).add(trade);
         analyzeIfNeeded(trade.getSymbol());
     }
 
@@ -95,12 +92,13 @@ public class TradeAnalysisService {
         if (amount >= 100_000) return 11; // Whale
         return (int)(amount / 10_000) + 1;
     }
-
-    public Map<Integer, List<BinanceAggTradeResDto>> getTradeLevels() {
-        return tradeLevelMap;
+//
+    public Map<Integer, List<BinanceAggTradeResDto>> getTradeLevels(String symbol) {
+        return getRecentTrades(symbol).stream()
+                .collect(Collectors.groupingBy(this::classifyTradeLevel));
     }
-
-    // Return trades of given symbol within past 5 minutes
+//
+//    // Return trades of given symbol within past 5 minutes
     public List<BinanceAggTradeResDto> getRecentTrades(String symbol) {
         long now = System.currentTimeMillis();
         return tradeBufferMap.getOrDefault(symbol, List.of()).stream()

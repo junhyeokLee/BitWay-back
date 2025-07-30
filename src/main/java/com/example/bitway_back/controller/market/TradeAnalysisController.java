@@ -23,6 +23,6 @@ public class TradeAnalysisController {
     @Operation(summary = "거래 레벨 조회 API", description = "거래 레벨별 집계된 거래 데이터 조회")
     @GetMapping
     public Map<Integer, List<BinanceAggTradeResDto>> getTradeLevels() {
-        return tradeAnalysisService.getTradeLevels();
+        return tradeAnalysisService.getTradeLevels("btcusdt"); // default symbol
     }
 }

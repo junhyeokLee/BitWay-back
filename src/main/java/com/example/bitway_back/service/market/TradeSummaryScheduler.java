@@ -55,7 +55,7 @@ public class TradeSummaryScheduler {
                 summary.setVolatilityDetected(true);
             }
 
-            tradeSummaryRepository.save(summary);
+//            tradeSummaryRepository.save(summary);
             log.info("📝 [요약 누적 저장] {}: {}", symbol, summary);
         }
     }
