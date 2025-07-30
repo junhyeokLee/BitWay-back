@@ -4,6 +4,8 @@ import com.example.bitway_back.dto.response.BinanceAggTradeResDto;
 import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.context.annotation.Lazy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.List;
@@ -15,6 +17,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class TradeAnalysisService {
+    private static final Logger log = LoggerFactory.getLogger(TradeAnalysisService.class);
+
     // For per-symbol trade buffering with timestamps
     private final Map<String, Deque<TimestampedTrade>> tradeBufferMap = new ConcurrentHashMap<>();
 
@@ -35,6 +39,7 @@ public class TradeAnalysisService {
     }
 
     public void processTrade(BinanceAggTradeResDto trade) {
+        log.info("[TradeAnalysis] Processing trade: {}", trade);
         if (trade == null) return;
         addTrade(trade.getSymbol(), trade);
         if (tradeSseService != null) {

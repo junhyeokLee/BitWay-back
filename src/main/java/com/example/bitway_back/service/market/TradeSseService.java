@@ -30,11 +30,19 @@ public class TradeSseService {
         emitter.onTimeout(() -> emitters.get(symbol).remove(emitter));
         emitter.onError((e) -> emitters.get(symbol).remove(emitter));
 
+        try {
+            emitter.send(SseEmitter.event().name("connected").data("SSE 연결 완료"));
+        } catch (IOException e) {
+            emitter.completeWithError(e);
+        }
+
         return emitter;
     }
 
     public void sendTradeUpdate(String symbol, BinanceAggTradeResDto trade) {
+        log.info("[SSE] Preparing to send trade update for symbol: {}", symbol);
         List<SseEmitter> emitterList = emitters.getOrDefault(symbol, List.of());
+        log.info("[SSE] Sending trade update to {} emitters", emitterList.size());
         for (SseEmitter emitter : emitterList) {
             try {
                 emitter.send(SseEmitter.event()
