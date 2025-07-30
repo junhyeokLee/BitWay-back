@@ -1,6 +1,6 @@
-// TradeSseService.java
 package com.example.bitway_back.service.market;
 
+import com.example.bitway_back.dto.response.BinanceAggTradeResDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -33,33 +33,37 @@ public class TradeSseService {
         return emitter;
     }
 
-    @Scheduled(fixedRate = 60_000)
-    public void sendSummaryToEmitters() {
-        emitters.forEach((symbol, emitterList) -> {
+    public void sendTradeUpdate(String symbol, BinanceAggTradeResDto trade) {
+        List<SseEmitter> emitterList = emitters.getOrDefault(symbol, List.of());
+        for (SseEmitter emitter : emitterList) {
             try {
-                Map<Integer, Long> levelCounts = tradeAnalysisService.getTodaySymbolTradeLevelCounts(symbol);
-                long whaleBuy = tradeAnalysisService.getWhaleBuyCount(symbol);
-                long whaleSell = tradeAnalysisService.getWhaleSellCount(symbol);
-                boolean volatility = tradeAnalysisService.hasRecentVolatility(symbol, 100_000);
+                emitter.send(SseEmitter.event()
+                        .name("trade")
+                        .data(trade));
+            } catch (IOException e) {
+                emitter.completeWithError(e);
+                // removed emitter during cleanup
+            }
+        }
+    }
 
-                Map<String, Object> summary = new HashMap<>();
-                summary.put("symbol", symbol);
-                summary.put("levelCounts", levelCounts);
-                summary.put("whaleBuyCount", whaleBuy);
-                summary.put("whaleSellCount", whaleSell);
-                summary.put("volatility", volatility);
-
-                emitterList.forEach(emitter -> {
-                    try {
-                        emitter.send(SseEmitter.event()
-                                .name("summary")
-                                .data(summary));
-                    } catch (IOException e) {
-                        emitter.complete();
-                    }
-                });
-            } catch (Exception e) {
-                log.warn("SSE 전송 오류: {}", e.getMessage());
+    // 🧹 Emitter 누수 방지를 위한 정리 로직 (1분마다)
+    @Scheduled(fixedRate = 60_000)
+    public void cleanInactiveEmitters() {
+        emitters.forEach((symbol, list) -> {
+            int before = list.size();
+            list.removeIf(emitter -> {
+                try {
+                    emitter.send(SseEmitter.event().name("ping").data("keepalive"));
+                    return false;
+                } catch (IOException e) {
+                    emitter.completeWithError(e);
+                    return true;
+                }
+            });
+            int after = list.size();
+            if (before != after) {
+                log.debug("[SSE] Removed {} inactive emitters for {}", (before - after), symbol);
             }
         });
     }
