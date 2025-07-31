@@ -1,21 +1,40 @@
+
 config:
-  target: "wss://bitway-back-production.up.railway.app/ws/trade?symbol=BTCUSDT"
+  target: "wss://bitway-back-production.up.railway.app"
   phases:
     - duration: 60
-      arrivalRate: 50
-    - duration: 60
-      arrivalRate: 100
-    - duration: 60
-      arrivalRate: 150
+      arrivalRate: 20  # 초당 20명씩 접속
+  protocols:
+    websocket: true
 
 scenarios:
   - engine: "ws"
     flow:
+      - connect:
+          url: "/ws/trade"
       - send:
-          text: '{"subscribe": "BTCUSDT"}'
-      - think: 10
-      - send:
-          text: '{"ping": "keepalive"}'
+          text: '{"type":"subscribe","symbol":"btcusdt"}'
+      - think: 5
+
+
+#config:
+#  target: "wss://bitway-back-production.up.railway.app/ws/trade?symbol=BTCUSDT"
+#  phases:
+#    - duration: 60
+#      arrivalRate: 50
+#    - duration: 60
+#      arrivalRate: 100
+#    - duration: 60
+#      arrivalRate: 150
+#
+#scenarios:
+#  - engine: "ws"
+#    flow:
+#      - send:
+#          text: '{"subscribe": "BTCUSDT"}'
+#      - think: 10
+#      - send:
+#          text: '{"ping": "keepalive"}'
 
 #config:
 #  target: "wss://bitway-back-production.up.railway.app/ws/trade?symbol=BTCUSDT"
