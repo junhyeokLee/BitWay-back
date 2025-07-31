@@ -32,16 +32,23 @@ public class TradeSseService {
         }
         emitters.computeIfAbsent(symbol, k -> new ArrayList<>()).add(emitter);
 
-        emitter.onCompletion(() -> emitters.get(symbol).remove(emitter));
-        emitter.onTimeout(() -> emitters.get(symbol).remove(emitter));
-        emitter.onError((e) -> emitters.get(symbol).remove(emitter));
+        emitter.onCompletion(() -> emitters.getOrDefault(symbol, new ArrayList<>()).remove(emitter));
+        emitter.onTimeout(() -> {
+            emitters.getOrDefault(symbol, new ArrayList<>()).remove(emitter);
+            emitter.completeWithError(new RuntimeException("SSE emitter timeout"));
+        });
+        emitter.onError((e) -> {
+            emitters.getOrDefault(symbol, new ArrayList<>()).remove(emitter);
+            emitter.completeWithError(e);
+        });
 
         return emitter;
     }
 
-    @Scheduled(fixedRate = 60_000)
+    @Scheduled(fixedRate = 1000)
     public void sendSummaryToEmitters() {
         emitters.forEach((symbol, emitterList) -> {
+            log.info("Sending SSE summary to symbol: {}", symbol);
             try {
                 Map<Integer, Long> levelCounts = tradeAnalysisService.getTodaySymbolTradeLevelCounts(symbol);
                 long whaleBuy = tradeAnalysisService.getWhaleBuyCount(symbol);
@@ -56,13 +63,16 @@ public class TradeSseService {
                 summary.put("volatility", volatility);
 
                 emitterList.forEach(emitter -> {
-                    try {
-                        emitter.send(SseEmitter.event()
-                                .name("summary")
-                                .data(summary));
-                    } catch (IOException e) {
-                        emitter.complete();
-                    }
+                    java.util.concurrent.CompletableFuture.runAsync(() -> {
+                        try {
+                            emitter.send(SseEmitter.event()
+                                    .name("summary")
+                                    .data(summary));
+                        } catch (IOException e) {
+                            emitter.completeWithError(e);
+                            emitters.getOrDefault(symbol, new ArrayList<>()).remove(emitter);
+                        }
+                    });
                 });
             } catch (Exception e) {
                 log.warn("SSE 전송 오류: {}", e.getMessage());
@@ -74,13 +84,16 @@ public class TradeSseService {
         List<SseEmitter> emitterList = emitters.getOrDefault(symbol, List.of());
 
         emitterList.forEach(emitter -> {
-            try {
-                emitter.send(SseEmitter.event()
-                        .name("realtime")
-                        .data(trade));
-            } catch (IOException e) {
-                emitter.complete();
-            }
+            java.util.concurrent.CompletableFuture.runAsync(() -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                            .name("realtime")
+                            .data(trade));
+                } catch (IOException e) {
+                    emitter.completeWithError(e);
+                    emitters.getOrDefault(symbol, new ArrayList<>()).remove(emitter);
+                }
+            });
         });
     }
 }

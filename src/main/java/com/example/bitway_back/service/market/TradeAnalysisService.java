@@ -1,40 +1,55 @@
 package com.example.bitway_back.service.market;
 
 import com.example.bitway_back.dto.response.BinanceAggTradeResDto;
+import com.example.bitway_back.redis.TradePublisher;
+import com.example.bitway_back.socket.TradeWebSocketHandler;
 import org.springframework.stereotype.Service;
-import org.springframework.scheduling.annotation.Scheduled;
+import lombok.RequiredArgsConstructor;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.time.Duration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 @Service
+@RequiredArgsConstructor
 public class TradeAnalysisService {
+
     private final TradeSseService tradeSseService;
+    private final TradeWebSocketHandler tradeWebSocketHandler;
+    private final TradePublisher tradePublisher;
 
-    public TradeAnalysisService(TradeSseService tradeSseService) {
-        this.tradeSseService = tradeSseService;
-    }
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
 
-    // For per-symbol trade buffering with timestamps
-    private final Map<String, List<TimestampedTrade>> tradeBufferMap = new ConcurrentHashMap<>();
-
-    // Record to store trade and when it was received
-    public record TimestampedTrade(BinanceAggTradeResDto trade, long receivedAtEpochMs) {}
+    @Autowired
+    private ObjectMapper objectMapper;
 
     // Add a trade to the buffer, wrapping with timestamp
     public void addTrade(String symbol, BinanceAggTradeResDto trade) {
-        tradeBufferMap.computeIfAbsent(symbol, k -> new CopyOnWriteArrayList<>())
-                      .add(new TimestampedTrade(trade, System.currentTimeMillis()));
+        try {
+            // 실시간 전송
+            tradeWebSocketHandler.broadcastToSessions(symbol, trade);
+
+            // Redis에 저장 (누적 저장)
+            String key = "trades:" + symbol.toLowerCase();
+            String json = objectMapper.writeValueAsString(trade);
+            redisTemplate.opsForList().rightPush(key, json);
+            redisTemplate.opsForList().trim(key, -1000, -1);
+            redisTemplate.expire(key, Duration.ofDays(1));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void processTrade(BinanceAggTradeResDto trade) {
         if (trade == null) return;
-        addTrade(trade.getSymbol(), trade);
-        tradeSseService.broadcastToEmitters(trade.getSymbol(), trade);
+        addTrade(trade.getSymbol(), trade); // 실시간 전송 및 Redis 저장
         analyzeIfNeeded(trade.getSymbol());
     }
 
@@ -88,6 +103,17 @@ public class TradeAnalysisService {
                    .append(String.format("%.4f", Math.abs(buyVolume - sellVolume))).append("\n");
             }
 
+            tradePublisher.publish(symbol, log.toString());
+
+            // Store analysis log in Redis for 1 day for historical access/reconnection
+            String analysisKey = "analysis:" + symbol.toLowerCase();
+            try {
+                redisTemplate.opsForList().rightPush(analysisKey, log.toString());
+                redisTemplate.expire(analysisKey, Duration.ofDays(1));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
 //            System.out.println(log.toString());
         }
     }
@@ -97,28 +123,30 @@ public class TradeAnalysisService {
         if (amount >= 100_000) return 11; // Whale
         return (int)(amount / 10_000) + 1;
     }
-//
+
     public Map<Integer, List<BinanceAggTradeResDto>> getTradeLevels(String symbol) {
         return getRecentTrades(symbol).stream()
                 .collect(Collectors.groupingBy(this::classifyTradeLevel));
     }
-//
-//    // Return trades of given symbol within past 5 minutes
+
+    // Return trades of given symbol
     public List<BinanceAggTradeResDto> getRecentTrades(String symbol) {
-        long now = System.currentTimeMillis();
-        return tradeBufferMap.getOrDefault(symbol, List.of()).stream()
-            .filter(entry -> now - entry.receivedAtEpochMs() <= Duration.ofMinutes(5).toMillis())
-            .map(TimestampedTrade::trade)
-            .toList();
+        String key = "trades:" + symbol.toLowerCase();
+        List<String> rawJsonList = redisTemplate.opsForList().range(key, 0, -1);
+        if (rawJsonList == null) return List.of();
+
+        return rawJsonList.stream()
+                .map(json -> {
+                    try {
+                        return objectMapper.readValue(json, BinanceAggTradeResDto.class);
+                    } catch (JsonProcessingException e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
 
-    @Scheduled(fixedRate = 300_000) // every 1 minute
-    public void cleanupOldTrades() {
-        long cutoff = System.currentTimeMillis() - Duration.ofMinutes(5).toMillis();
-        tradeBufferMap.forEach((symbol, list) ->
-            list.removeIf(t -> t.receivedAtEpochMs() < cutoff)
-        );
-    }
 
     public Map<Integer, Long> getTodaySymbolTradeLevelCounts(String symbol) {
         return getRecentTrades(symbol).stream()
