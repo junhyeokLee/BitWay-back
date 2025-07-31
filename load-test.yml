@@ -2,10 +2,8 @@
 config:
   target: "wss://bitway-back-production.up.railway.app/ws/trade?symbol=BTCUSDT"
   phases:
-    - duration: 60
-      arrivalRate: 20  # 초당 20명씩 접속
-  protocols:
-    websocket: true
+    - duration: 30
+      arrivalRate: 50 # // 30초동안 초당 20명 = 1500명
 
 scenarios:
   - engine: "ws"
@@ -15,26 +13,6 @@ scenarios:
       - think: 10
       - send:
           text: '{"ping": "keepalive"}'
-
-
-#config:
-#  target: "wss://bitway-back-production.up.railway.app/ws/trade?symbol=BTCUSDT"
-#  phases:
-#    - duration: 60
-#      arrivalRate: 50
-#    - duration: 60
-#      arrivalRate: 100
-#    - duration: 60
-#      arrivalRate: 150
-#
-#scenarios:
-#  - engine: "ws"
-#    flow:
-#      - send:
-#          text: '{"subscribe": "BTCUSDT"}'
-#      - think: 10
-#      - send:
-#          text: '{"ping": "keepalive"}'
 
 #config:
 #  target: "wss://bitway-back-production.up.railway.app/ws/trade?symbol=BTCUSDT"
