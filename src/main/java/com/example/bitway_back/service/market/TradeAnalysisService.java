@@ -20,7 +20,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 @RequiredArgsConstructor
 public class TradeAnalysisService {
 
-    private final TradeSseService tradeSseService;
     private final TradeWebSocketHandler tradeWebSocketHandler;
     private final TradePublisher tradePublisher;
 
