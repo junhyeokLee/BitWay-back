@@ -4,36 +4,41 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.socket.WebSocketHandler;
-import org.springframework.web.reactive.socket.WebSocketSession;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.CloseStatus;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class TradeWebSocketHandler implements WebSocketHandler {
+public class TradeWebSocketHandler extends TextWebSocketHandler {
 
     private final ObjectMapper objectMapper;
 
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+
     @Override
-    public Mono<Void> handle(WebSocketSession session) {
+    public void afterConnectionEstablished(WebSocketSession session) {
         String sessionId = session.getId();
         sessions.put(sessionId, session);
         log.info("WebSocket 연결됨: {}", sessionId);
+    }
 
-        return session.receive()
-                .doOnNext(msg -> log.info("수신 메시지 [{}]: {}", sessionId, msg.getPayloadAsText()))
-                .doOnTerminate(() -> {
-                    sessions.remove(sessionId);
-                    log.info("WebSocket 종료됨: {}", sessionId);
-                })
-                .then();
+    @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+        String sessionId = session.getId();
+        log.info("수신 메시지 [{}]: {}", sessionId, message.getPayload());
+    }
+
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        String sessionId = session.getId();
+        sessions.remove(sessionId);
+        log.info("WebSocket 종료됨: {}", sessionId);
     }
 
     public void broadcast(Object payload) {
@@ -45,10 +50,15 @@ public class TradeWebSocketHandler implements WebSocketHandler {
             return;
         }
 
-        Flux.fromIterable(sessions.values())
+        sessions.values().stream()
                 .filter(WebSocketSession::isOpen)
-                .flatMap(session -> session.send(Mono.just(session.textMessage(json))))
-                .subscribe();
+                .forEach(session -> {
+                    try {
+                        session.sendMessage(new TextMessage(json));
+                    } catch (Exception e) {
+                        log.error("메시지 전송 실패", e);
+                    }
+                });
     }
 
     public int getActiveSessionCount() {

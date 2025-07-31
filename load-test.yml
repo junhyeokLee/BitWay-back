@@ -1,6 +1,6 @@
 
 config:
-  target: "wss://bitway-back-production.up.railway.app"
+  target: "wss://bitway-back-production.up.railway.app/ws/trade?symbol=BTCUSDT"
   phases:
     - duration: 60
       arrivalRate: 20  # 초당 20명씩 접속
@@ -10,11 +10,11 @@ config:
 scenarios:
   - engine: "ws"
     flow:
-      - connect:
-          url: "/ws/trade"
       - send:
-          text: '{"type":"subscribe","symbol":"btcusdt"}'
-      - think: 5
+          text: '{"subscribe": "BTCUSDT"}'
+      - think: 10
+      - send:
+          text: '{"ping": "keepalive"}'
 
 
 #config:
