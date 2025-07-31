@@ -1,0 +1,37 @@
+config:
+  target: "wss://bitway-back-production.up.railway.app/ws/trade?symbol=BTCUSDT"
+  phases:
+    - duration: 60
+      arrivalRate: 50
+    - duration: 60
+      arrivalRate: 100
+    - duration: 60
+      arrivalRate: 150
+
+scenarios:
+  - engine: "ws"
+    flow:
+      - send:
+          text: '{"subscribe": "BTCUSDT"}'
+      - think: 10
+      - send:
+          text: '{"ping": "keepalive"}'
+
+#config:
+#  target: "wss://bitway-back-production.up.railway.app/ws/trade?symbol=BTCUSDT"
+#  phases:
+#    - duration: 30
+#      arrivalRate: 100   # 초당 100명 = 3,000명
+#    - duration: 30
+#      arrivalRate: 300   # 초당 300명 = 9,000명
+#    - duration: 60
+#      arrivalRate: 500   # 초당 500명 = 30,000명
+#
+#scenarios:
+#  - engine: "ws"
+#    flow:
+#      - send:
+#          text: '{"subscribe": "BTCUSDT"}'
+#      - think: 10
+#      - send:
+#          text: '{"ping": "keepalive"}'

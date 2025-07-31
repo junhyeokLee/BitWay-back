@@ -36,6 +36,8 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework:spring-messaging'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.fasterxml.jackson.core:jackson-databind' // JSON 직렬화용
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'

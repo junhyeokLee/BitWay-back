@@ -4,91 +4,92 @@ import com.example.bitway_back.dto.response.BinanceAggTradeResDto;
 import com.example.bitway_back.service.market.TradeAnalysisService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.WebSocket;
-import okhttp3.WebSocketListener;
-import org.springframework.beans.factory.annotation.Autowired;
+import okhttp3.*;
+
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
+import java.util.concurrent.*;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class BinanceAggTradeWebSocketClient {
 
-    private static final String[] SYMBOLS = {"btcusdt"};
+    private final TradeAnalysisService tradeAnalysisService;
+    private final ObjectMapper objectMapper;
+
+    private final Map<String, WebSocket> webSocketMap = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+    private static final String[] SYMBOLS = {"btcusdt"}; // 여기에 원하는 심볼 추가
 
     @PostConstruct
-    public void start() {
-        OkHttpClient client = new OkHttpClient();
-        ObjectMapper mapper = new ObjectMapper();
-
+    public void startAll() {
         for (String symbol : SYMBOLS) {
-            String url = "wss://stream.binance.com:9443/ws/" + symbol + "@aggTrade";
-            Request request = new Request.Builder().url(url).build();
-            client.newWebSocket(request, new WebSocketListener() {
-                @Override
-                public void onMessage(WebSocket webSocket, String text) {
-                    try {
-                        BinanceAggTradeResDto trade = mapper.readValue(text, BinanceAggTradeResDto.class);
-                        tradeAnalysisService.processTrade(trade);
-                    } catch (Exception e) {
-                        log.error("WebSocket Parse Error (" + symbol + "): " + e.getMessage(), e);
-                    }
-                }
-
-                @Override
-                public void onFailure(WebSocket webSocket, Throwable t, okhttp3.Response response) {
-                    log.error("WebSocket 연결 실패: {}", t.getMessage(), t);
-                    reconnect(symbol);
-                }
-
-                @Override
-                public void onClosing(WebSocket webSocket, int code, String reason) {
-                    log.warn("WebSocket 종료 중... code: {}, reason: {}", code, reason);
-                    webSocket.close(1000, null);
-                    reconnect(symbol);
-                }
-
-                @Override
-                public void onClosed(WebSocket webSocket, int code, String reason) {
-                    log.warn("WebSocket 종료 완료. code: {}, reason: {}", code, reason);
-                    reconnect(symbol);
-                }
-            });
+            connect(symbol);
         }
+        // 연결 상태 감시 및 재시도
+        scheduler.scheduleAtFixedRate(this::checkAndReconnect, 10, 20, TimeUnit.SECONDS);
     }
 
-    private BinanceAggTradeResDto parseTrade(String text) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(text, BinanceAggTradeResDto.class);
-        } catch (Exception e) {
-            log.error("WebSocket Parse Error", e);
-            return null;
-        }
-    }
+    private void connect(String symbol) {
+        OkHttpClient client = new OkHttpClient();
+        String url = "wss://stream.binance.com:9443/ws/" + symbol.toLowerCase() + "@aggTrade";
 
-    private void reconnect(String symbol) {
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException ignored) {}
-        log.info("🔁 WebSocket 재연결 시도: {}", symbol);
-        String url = "wss://stream.binance.com:9443/ws/" + symbol + "@aggTrade";
         Request request = new Request.Builder().url(url).build();
-        new OkHttpClient().newWebSocket(request, new WebSocketListener() {
+        WebSocket ws = client.newWebSocket(request, new WebSocketListener() {
             @Override
             public void onMessage(WebSocket webSocket, String text) {
                 try {
-                    BinanceAggTradeResDto trade = new ObjectMapper().readValue(text, BinanceAggTradeResDto.class);
+                    BinanceAggTradeResDto trade = objectMapper.readValue(text, BinanceAggTradeResDto.class);
                     tradeAnalysisService.processTrade(trade);
                 } catch (Exception e) {
-                    log.error("WebSocket Parse Error (reconnect): {}", e.getMessage(), e);
+                    log.error("WebSocket Parse Error (" + symbol + "): " + e.getMessage(), e);
                 }
             }
+
+            @Override
+            public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+                log.error("WebSocket 연결 실패 ({}) : {}", symbol, t.getMessage());
+                webSocketMap.remove(symbol);
+            }
+
+            @Override
+            public void onClosing(WebSocket webSocket, int code, String reason) {
+                log.warn("WebSocket 종료 중... ({}) code: {}, reason: {}", symbol, code, reason);
+                webSocket.close(1000, null);
+                webSocketMap.remove(symbol);
+            }
+
+            @Override
+            public void onClosed(WebSocket webSocket, int code, String reason) {
+                log.warn("WebSocket 종료 완료. ({}) code: {}, reason: {}", symbol, code, reason);
+                webSocketMap.remove(symbol);
+            }
         });
+
+        webSocketMap.put(symbol, ws);
+        log.info("✅ WebSocket 연결 완료: {}", symbol);
     }
 
-    @Autowired
-    private TradeAnalysisService tradeAnalysisService;
+    private void checkAndReconnect() {
+        for (String symbol : SYMBOLS) {
+            WebSocket ws = webSocketMap.get(symbol);
+            if (ws == null) {
+                log.warn("❌ WebSocket 재연결 시도: {}", symbol);
+                connect(symbol);
+            }
+        }
+    }
+
+    @PreDestroy
+    public void shutdownAll() {
+        scheduler.shutdownNow();
+        webSocketMap.values().forEach(ws -> ws.close(1000, "Application shutdown"));
+        webSocketMap.clear();
+    }
 }

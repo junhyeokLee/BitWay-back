@@ -4,14 +4,12 @@ import com.example.bitway_back.dto.response.BinanceAggTradeResDto;
 import com.example.bitway_back.dto.response.TradeAnalysisLogResDto;
 import com.example.bitway_back.dto.response.WhaleTradeResDto;
 import com.example.bitway_back.redis.TradePublisher;
-import com.example.bitway_back.socket.TradeWebSocketHandler;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +22,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 @RequiredArgsConstructor
 public class TradeAnalysisService {
 
-    private final TradeWebSocketHandler tradeWebSocketHandler;
     private final TradePublisher tradePublisher;
 
     @Autowired
@@ -36,8 +33,8 @@ public class TradeAnalysisService {
     // Add a trade to the buffer, wrapping with timestamp
     public void addTrade(String symbol, BinanceAggTradeResDto trade) {
         try {
-            // 실시간 전송 (비동기화 처리)
-            CompletableFuture.runAsync(() -> tradeWebSocketHandler.broadcast(symbol, trade));
+            String publishJson = objectMapper.writeValueAsString(trade);
+            tradePublisher.publish(symbol, publishJson);
 
             // Redis에 저장 (누적 저장)
             String key = "trades:" + symbol.toLowerCase();
@@ -113,7 +110,6 @@ public class TradeAnalysisService {
                 String json = objectMapper.writeValueAsString(logDto);
 
                 tradePublisher.publish(symbol, json);
-                tradeWebSocketHandler.broadcast(symbol, json);
 
                 String analysisKey = "analysis:" + symbol.toLowerCase();
                 redisTemplate.opsForList().rightPush(analysisKey, json);
