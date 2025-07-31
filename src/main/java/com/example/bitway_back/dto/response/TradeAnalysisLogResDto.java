@@ -1,0 +1,20 @@
+package com.example.bitway_back.dto.response;
+
+import lombok.Builder;
+import lombok.Data;
+
+import java.util.List;
+import java.util.Map;
+
+@Data
+@Builder
+public class TradeAnalysisLogResDto {
+    private String symbol;
+    private String timeRange;
+    private Map<Integer, Long> tradeLevels;
+    private List<WhaleTradeResDto> whaleTrades;
+    private Double buyVolume;
+    private Double sellVolume;
+    private Double diffVolume;
+    private boolean volatilityDetected;
+}

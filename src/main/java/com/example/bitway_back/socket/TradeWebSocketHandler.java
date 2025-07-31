@@ -91,7 +91,7 @@ public class TradeWebSocketHandler extends TextWebSocketHandler {
         return (idx != -1) ? uri.substring(idx + 7).toUpperCase() : "BTCUSDT";
     }
 
-    public void broadcastToSessions(String symbol, BinanceAggTradeResDto trade) {
+    public void broadcastToSessions(String symbol, Object trade) {
         Set<WebSocketSession> sessions = sessionsBySymbol.getOrDefault(symbol, Set.of());
         String json;
         try {

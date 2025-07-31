@@ -17,17 +17,30 @@ public class RedisMessageSubscriber implements MessageListener {
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
+        String topic = new String(message.getChannel());
+        String body = new String(message.getBody());
+        String symbol;
         try {
-            String topic = new String(message.getChannel());
-            String symbol = topic.substring(topic.indexOf(":") + 1).toUpperCase();
-            String json = new String(message.getBody());
-
-            BinanceAggTradeResDto trade = objectMapper.readValue(json, BinanceAggTradeResDto.class);
-            tradeWebSocketHandler.broadcastToSessions(symbol, trade);
-
+            if (topic.startsWith("trades:")) {
+                symbol = topic.substring("trades:".length()).toUpperCase();
+                // Defensive JSON check: skip if not JSON object (starts with '{')
+                if (body != null && body.trim().startsWith("{")) {
+                    BinanceAggTradeResDto trade = objectMapper.readValue(body, BinanceAggTradeResDto.class);
+                    tradeWebSocketHandler.broadcastToSessions(symbol, (Object) trade);
+                } else {
+                    System.err.println("trades 채널 메시지가 JSON 형식이 아님: " + body);
+                }
+            } else if (topic.startsWith("analysis:")) {
+                symbol = topic.substring("analysis:".length()).toUpperCase();
+                tradeWebSocketHandler.broadcastToSessions(symbol, (Object) body);
+            } else {
+                System.err.println("알 수 없는 Redis 채널: " + topic);
+            }
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            System.err.println("Redis 메시지 파싱 실패: " + body);
+            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
-            // 로그를 남기거나 에러 처리를 추가할 수 있습니다.
         }
     }
 }

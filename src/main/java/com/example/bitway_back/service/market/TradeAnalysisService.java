@@ -1,6 +1,8 @@
 package com.example.bitway_back.service.market;
 
 import com.example.bitway_back.dto.response.BinanceAggTradeResDto;
+import com.example.bitway_back.dto.response.TradeAnalysisLogResDto;
+import com.example.bitway_back.dto.response.WhaleTradeResDto;
 import com.example.bitway_back.redis.TradePublisher;
 import com.example.bitway_back.socket.TradeWebSocketHandler;
 import org.springframework.stereotype.Service;
@@ -33,7 +35,7 @@ public class TradeAnalysisService {
     public void addTrade(String symbol, BinanceAggTradeResDto trade) {
         try {
             // 실시간 전송
-            tradeWebSocketHandler.broadcastToSessions(symbol, trade);
+            tradeWebSocketHandler.broadcastToSessions(symbol, (Object)trade);
 
             // Redis에 저장 (누적 저장)
             String key = "trades:" + symbol.toLowerCase();
@@ -63,57 +65,51 @@ public class TradeAnalysisService {
             java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(java.time.ZoneId.of("Asia/Seoul"));
 
             double buyVolume = recentTrades.stream()
-                    .filter(t -> !t.isBuyerMaker()) // 매수세
+                    .filter(t -> !t.isBuyerMaker())
                     .mapToDouble(BinanceAggTradeResDto::getQuantity).sum();
 
             double sellVolume = recentTrades.stream()
-                    .filter(BinanceAggTradeResDto::isBuyerMaker) // 매도세
+                    .filter(BinanceAggTradeResDto::isBuyerMaker)
                     .mapToDouble(BinanceAggTradeResDto::getQuantity).sum();
 
             Map<Integer, Long> levelCounts = recentTrades.stream()
                     .collect(Collectors.groupingBy(this::classifyTradeLevel, Collectors.counting()));
 
-            StringBuilder log = new StringBuilder();
-            log.append("코인 ").append(sym).append("\n");
-            log.append("시간 ").append(formatter.format(java.time.Instant.ofEpochMilli(startTime)))
-               .append(" ~ ").append(formatter.format(java.time.Instant.ofEpochMilli(endTime))).append("\n");
+            List<WhaleTradeResDto> whaleTrades = recentTrades.stream()
+                    .filter(t -> classifyTradeLevel(t) == 11)
+                    .map(t -> WhaleTradeResDto.builder()
+                            .side(t.isBuyerMaker() ? "매도" : "매수")
+                            .quantity(t.getQuantity())
+                            .price(t.getPrice())
+                            .total(t.getQuantity() * t.getPrice())
+                            .timestamp(formatter.format(java.time.Instant.ofEpochMilli(t.getTimestamp())))
+                            .build())
+                    .collect(Collectors.toList());
 
-            log.append("[단계별 거래 수]\n");
-            levelCounts.forEach((level, count) ->
-                log.append(" - 단계 ").append(level).append(level == 11 ? " (고래)" : "")
-                   .append(": ").append(count).append("건\n")
-            );
+            TradeAnalysisLogResDto logDto = TradeAnalysisLogResDto.builder()
+                    .symbol(sym)
+                    .timeRange(formatter.format(java.time.Instant.ofEpochMilli(startTime)) + " ~ " +
+                               formatter.format(java.time.Instant.ofEpochMilli(endTime)))
+                    .tradeLevels(levelCounts)
+                    .buyVolume(buyVolume)
+                    .sellVolume(sellVolume)
+                    .diffVolume(Math.abs(buyVolume - sellVolume))
+                    .volatilityDetected(Math.abs(buyVolume - sellVolume) > 1000)
+                    .whaleTrades(whaleTrades)
+                    .build();
 
-            log.append("🐋 [고래 체결 내역]\n");
-            recentTrades.stream()
-                .filter(t -> classifyTradeLevel(t) == 11)
-                .forEach(t -> {
-                    String side = t.isBuyerMaker() ? "매도" : "매수";
-                    String time = formatter.format(java.time.Instant.ofEpochMilli(t.getTimestamp()));
-                    log.append(" - ").append(side)
-                       .append(": 수량 ").append(t.getQuantity())
-                       .append("개 × 가격 ").append(t.getPrice())
-                       .append(" = 총 ").append(String.format("%.2f", t.getQuantity() * t.getPrice()))
-                       .append(" (").append(time).append(")\n");
-                });
-
-            if (Math.abs(buyVolume - sellVolume) > 1000) {
-                log.append("⚠️ 급변 감지! 매수-매도 차이: ")
-                   .append(String.format("%.4f", Math.abs(buyVolume - sellVolume))).append("\n");
-            }
-
-            tradePublisher.publish(symbol, log.toString());
-
-            // Store analysis log in Redis for 1 day for historical access/reconnection
-            String analysisKey = "analysis:" + symbol.toLowerCase();
             try {
-                redisTemplate.opsForList().rightPush(analysisKey, log.toString());
+                String json = objectMapper.writeValueAsString(logDto);
+
+                tradePublisher.publish(symbol, json);
+                tradeWebSocketHandler.broadcastToSessions(symbol, (Object)json);
+
+                String analysisKey = "analysis:" + symbol.toLowerCase();
+                redisTemplate.opsForList().rightPush(analysisKey, json);
                 redisTemplate.expire(analysisKey, Duration.ofDays(1));
-            } catch (Exception e) {
+            } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
-
-//            System.out.println(log.toString());
         }
     }
 
