@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 public class RedisMessageSubscriber implements MessageListener {
 
     private final TradeWebSocketHandler tradeWebSocketHandler;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
@@ -26,13 +26,13 @@ public class RedisMessageSubscriber implements MessageListener {
                 // Defensive JSON check: skip if not JSON object (starts with '{')
                 if (body != null && body.trim().startsWith("{")) {
                     BinanceAggTradeResDto trade = objectMapper.readValue(body, BinanceAggTradeResDto.class);
-                    tradeWebSocketHandler.broadcastToSessions(symbol, (Object) trade);
+                    tradeWebSocketHandler.broadcast(symbol, trade);
                 } else {
                     System.err.println("trade 채널 메시지가 JSON 형식이 아님: " + body);
                 }
             } else if (topic.startsWith("analysis:")) {
                 symbol = topic.substring("analysis:".length()).toUpperCase();
-                tradeWebSocketHandler.broadcastToSessions(symbol, (Object) body);
+                tradeWebSocketHandler.broadcast(symbol, body);
             } else {
                 System.err.println("알 수 없는 Redis 채널: " + topic);
             }

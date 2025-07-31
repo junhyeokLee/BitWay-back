@@ -11,12 +11,14 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.scheduling.annotation.Scheduled;
 
 @Service
 @RequiredArgsConstructor
@@ -34,8 +36,8 @@ public class TradeAnalysisService {
     // Add a trade to the buffer, wrapping with timestamp
     public void addTrade(String symbol, BinanceAggTradeResDto trade) {
         try {
-            // 실시간 전송
-            tradeWebSocketHandler.broadcastToSessions(symbol, (Object)trade);
+            // 실시간 전송 (비동기화 처리)
+            CompletableFuture.runAsync(() -> tradeWebSocketHandler.broadcast(symbol, trade));
 
             // Redis에 저장 (누적 저장)
             String key = "trades:" + symbol.toLowerCase();
@@ -43,6 +45,7 @@ public class TradeAnalysisService {
             redisTemplate.opsForList().rightPush(key, json);
             redisTemplate.opsForList().trim(key, -1000, -1);
             redisTemplate.expire(key, Duration.ofDays(1));
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -54,29 +57,38 @@ public class TradeAnalysisService {
         analyzeIfNeeded(trade.getSymbol());
     }
 
+    private long getTodayStartMillis() {
+        return java.time.ZonedDateTime.now(java.time.ZoneId.of("Asia/Seoul"))
+            .withHour(8).withMinute(0).withSecond(0).withNano(0)
+            .toInstant().toEpochMilli();
+    }
+
     // Analyze only for trades of a given symbol
     private void analyzeIfNeeded(String symbol) {
         long now = System.currentTimeMillis();
-        List<BinanceAggTradeResDto> recentTrades = getRecentTrades(symbol);
+        long todayStartTimestamp = getTodayStartMillis();
+        List<BinanceAggTradeResDto> recentTrades = getRecentTrades(symbol).stream()
+            .filter(t -> t.getTimestamp() >= todayStartTimestamp)
+            .toList();
         if (!recentTrades.isEmpty()) {
             String sym = recentTrades.get(0).getSymbol();
-            long startTime = recentTrades.stream().mapToLong(BinanceAggTradeResDto::getTimestamp).min().orElse(now);
             long endTime = recentTrades.stream().mapToLong(BinanceAggTradeResDto::getTimestamp).max().orElse(now);
             java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(java.time.ZoneId.of("Asia/Seoul"));
 
             double buyVolume = recentTrades.stream()
                     .filter(t -> !t.isBuyerMaker())
-                    .mapToDouble(BinanceAggTradeResDto::getQuantity).sum();
+                    .mapToDouble(t -> t.getPrice() * t.getQuantity()).sum();
 
             double sellVolume = recentTrades.stream()
                     .filter(BinanceAggTradeResDto::isBuyerMaker)
-                    .mapToDouble(BinanceAggTradeResDto::getQuantity).sum();
+                    .mapToDouble(t -> t.getPrice() * t.getQuantity()).sum();
 
             Map<Integer, Long> levelCounts = recentTrades.stream()
                     .collect(Collectors.groupingBy(this::classifyTradeLevel, Collectors.counting()));
 
             List<WhaleTradeResDto> whaleTrades = recentTrades.stream()
                     .filter(t -> classifyTradeLevel(t) == 11)
+                    .sorted(java.util.Comparator.comparingLong(BinanceAggTradeResDto::getTimestamp))
                     .map(t -> WhaleTradeResDto.builder()
                             .side(t.isBuyerMaker() ? "매도" : "매수")
                             .quantity(t.getQuantity())
@@ -88,21 +100,20 @@ public class TradeAnalysisService {
 
             TradeAnalysisLogResDto logDto = TradeAnalysisLogResDto.builder()
                     .symbol(sym)
-                    .timeRange(formatter.format(java.time.Instant.ofEpochMilli(startTime)) + " ~ " +
-                               formatter.format(java.time.Instant.ofEpochMilli(endTime)))
                     .tradeLevels(levelCounts)
                     .buyVolume(buyVolume)
                     .sellVolume(sellVolume)
                     .diffVolume(Math.abs(buyVolume - sellVolume))
                     .volatilityDetected(Math.abs(buyVolume - sellVolume) > 1000)
                     .whaleTrades(whaleTrades)
+                    .latestTradeTime(formatter.format(java.time.Instant.ofEpochMilli(endTime)))
                     .build();
 
             try {
                 String json = objectMapper.writeValueAsString(logDto);
 
                 tradePublisher.publish(symbol, json);
-                tradeWebSocketHandler.broadcastToSessions(symbol, (Object)json);
+                tradeWebSocketHandler.broadcast(symbol, json);
 
                 String analysisKey = "analysis:" + symbol.toLowerCase();
                 redisTemplate.opsForList().rightPush(analysisKey, json);
@@ -172,6 +183,15 @@ public class TradeAnalysisService {
                 .sum();
 
         return Math.abs(buyVolume - sellVolume) > thresholdUSD;
+    }
+
+    // Scheduled Redis cleanup at 8:00 AM Asia/Seoul
+    @Scheduled(cron = "0 0 8 * * *", zone = "Asia/Seoul")
+    public void clearYesterdayTrades() {
+        for (String symbol : List.of("btcusdt")) { // Add other symbols if needed
+            redisTemplate.delete("trades:" + symbol.toLowerCase());
+            redisTemplate.delete("analysis:" + symbol.toLowerCase());
+        }
     }
 
 }

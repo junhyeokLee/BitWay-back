@@ -92,27 +92,4 @@ public class TradeWebSocketHandler extends TextWebSocketHandler {
         int idx = uri.indexOf("symbol=");
         return (idx != -1) ? uri.substring(idx + 7).toUpperCase() : "BTCUSDT";
     }
-
-    public void broadcastToSessions(String symbol, Object trade) {
-        Set<WebSocketSession> sessions = sessionsBySymbol.getOrDefault(symbol, Set.of());
-        String json;
-        try {
-            json = objectMapper.writeValueAsString(trade);
-        } catch (Exception e) {
-            log.error("WebSocket 직렬화 실패", e);
-            return;
-        }
-
-        for (WebSocketSession session : sessions) {
-            if (session.isOpen()) {
-                try {
-                    synchronized (session) {
-                        session.sendMessage(new TextMessage(json));
-                    }
-                } catch (Exception e) {
-                    log.warn("WebSocket 전송 실패: {}", e.getMessage());
-                }
-            }
-        }
-    }
 }

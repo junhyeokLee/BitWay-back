@@ -10,7 +10,7 @@ import java.util.Map;
 @Builder
 public class TradeAnalysisLogResDto {
     private String symbol;
-    private String timeRange;
+    private String latestTradeTime;
     private Map<Integer, Long> tradeLevels;
     private List<WhaleTradeResDto> whaleTrades;
     private Double buyVolume;
