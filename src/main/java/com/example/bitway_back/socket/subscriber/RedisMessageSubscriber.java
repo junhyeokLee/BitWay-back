@@ -21,14 +21,14 @@ public class RedisMessageSubscriber implements MessageListener {
         String body = new String(message.getBody());
         String symbol;
         try {
-            if (topic.startsWith("trades:")) {
-                symbol = topic.substring("trades:".length()).toUpperCase();
+            if (topic.startsWith("trade:")) {
+                symbol = topic.substring("trade:".length()).toUpperCase();
                 // Defensive JSON check: skip if not JSON object (starts with '{')
                 if (body != null && body.trim().startsWith("{")) {
                     BinanceAggTradeResDto trade = objectMapper.readValue(body, BinanceAggTradeResDto.class);
                     tradeWebSocketHandler.broadcastToSessions(symbol, (Object) trade);
                 } else {
-                    System.err.println("trades 채널 메시지가 JSON 형식이 아님: " + body);
+                    System.err.println("trade 채널 메시지가 JSON 형식이 아님: " + body);
                 }
             } else if (topic.startsWith("analysis:")) {
                 symbol = topic.substring("analysis:".length()).toUpperCase();
