@@ -77,7 +77,9 @@ public class TradeWebSocketHandler extends TextWebSocketHandler {
         for (WebSocketSession session : sessions) {
             if (session.isOpen()) {
                 try {
-                    session.sendMessage(new TextMessage(json));
+                    synchronized (session) {
+                        session.sendMessage(new TextMessage(json));
+                    }
                 } catch (Exception e) {
                     log.warn("WebSocket 전송 실패: {}", e.getMessage());
                 }
@@ -104,7 +106,9 @@ public class TradeWebSocketHandler extends TextWebSocketHandler {
         for (WebSocketSession session : sessions) {
             if (session.isOpen()) {
                 try {
-                    session.sendMessage(new TextMessage(json));
+                    synchronized (session) {
+                        session.sendMessage(new TextMessage(json));
+                    }
                 } catch (Exception e) {
                     log.warn("WebSocket 전송 실패: {}", e.getMessage());
                 }
