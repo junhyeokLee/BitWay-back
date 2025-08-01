@@ -10,7 +10,7 @@ scenarios:
     flow:
       - send:
           text: '{"subscribe": "BTCUSDT"}'
-      - think: 10
+      - think: 1
       - send:
           text: '{"ping": "keepalive"}'
 

@@ -1,6 +1,7 @@
 package com.example.bitway_back.config;
 
-import com.example.bitway_back.socket.TradeWebSocketHandler;
+import com.example.bitway_back.util.TradeHandshakeInterceptor;
+import com.example.bitway_back.ws.handler.TradeAggWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
@@ -12,10 +13,12 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketConfigurer {
 
-    private final TradeWebSocketHandler tradeWebSocketHandler;
+    private final TradeAggWebSocketHandler tradeWebSocketHandler;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(tradeWebSocketHandler, "/ws/trade").setAllowedOrigins("*");
+        registry.addHandler(tradeWebSocketHandler, "/ws/trade")
+                .setAllowedOrigins("*")
+                .addInterceptors(new TradeHandshakeInterceptor());
     }
 }

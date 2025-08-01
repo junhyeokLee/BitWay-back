@@ -2,7 +2,7 @@ package com.example.bitway_back.security;
 
 import com.example.bitway_back.domain.user.User;
 import com.example.bitway_back.exception.ErrorCode;
-import com.example.bitway_back.repository.user.UserRepository;
+import com.example.bitway_back.api.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
