@@ -1,6 +1,6 @@
 package com.example.bitway_back.api.controller.coin;
 
-import com.example.bitway_back.dto.response.KimchiPremiumDto;
+import com.example.bitway_back.dto.response.KimchiPremiumResDto;
 import com.example.bitway_back.api.service.coin.KimchiPremiumRedisCache;
 import com.example.bitway_back.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +32,7 @@ public class KimchiPremiumController {
 
     @Operation(summary = "모든 김치 프리미엄 조회 API")
     @GetMapping
-    public List<KimchiPremiumDto> getCachedPremiums(
+    public List<KimchiPremiumResDto> getCachedPremiums(
             @RequestParam(required = false) String domestic,
             @RequestParam(required = false) String overseas,
             @RequestParam(defaultValue = "price_desc") String sortBy

@@ -1,7 +1,7 @@
 package com.example.bitway_back.util;
 
 import com.example.bitway_back.domain.coin.CoinLogo;
-import com.example.bitway_back.dto.response.KimchiPremiumDto;
+import com.example.bitway_back.dto.response.KimchiPremiumResDto;
 
 import java.util.HashMap;
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public class KimchiPremiumCalculator {
 
-    public static KimchiPremiumDto calculate(
+    public static KimchiPremiumResDto calculate(
             String symbol,
             double domesticPrice,
             double overseasPriceUsd,
@@ -40,7 +40,7 @@ public class KimchiPremiumCalculator {
                 })
                 .orElse(Map.of());
 
-        return KimchiPremiumDto.builder()
+        return KimchiPremiumResDto.builder()
                 .symbol(symbol)
                 .domesticExchange(domesticExchange)
                 .domesticPrice(domesticPrice)

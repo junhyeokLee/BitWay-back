@@ -1,5 +1,5 @@
 package com.example.bitway_back.api.service.coin;
-import com.example.bitway_back.dto.response.KimchiPremiumDto;
+import com.example.bitway_back.dto.response.KimchiPremiumResDto;
 import com.example.bitway_back.api.service.exchange.ExchangeRateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -17,13 +17,13 @@ import static com.example.bitway_back.util.KimchiPremiumCalculator.calculate;
 @RequiredArgsConstructor
 public class KimchiPremiumRedisCache {
 
-    private final RedisTemplate<String, KimchiPremiumDto> redisTemplate;
+    private final RedisTemplate<String, KimchiPremiumResDto> redisTemplate;
     private static final String PREFIX = "kimp:";
     private final FavoriteService favoriteService;
     private final ExchangeRateService exchangeRateService;
     private final CoinLogoService coinLogoService;
 
-    private boolean hasChanged(KimchiPremiumDto oldVal, KimchiPremiumDto newVal) {
+    private boolean hasChanged(KimchiPremiumResDto oldVal, KimchiPremiumResDto newVal) {
         if (oldVal == null) return true;
         return !Objects.equals(oldVal.getDomesticPrice(), newVal.getDomesticPrice())
                || !Objects.equals(oldVal.getOverseasPrice(), newVal.getOverseasPrice())
@@ -34,15 +34,15 @@ public class KimchiPremiumRedisCache {
                || !Objects.equals(oldVal.getVolatilityIndex(), newVal.getVolatilityIndex());
     }
 
-    public void put(KimchiPremiumDto dto) {
+    public void put(KimchiPremiumResDto dto) {
         String cacheKey = PREFIX + dto.getSymbol() + ":" + dto.getDomesticExchange() + ":" + dto.getOverseasExchange();
-        KimchiPremiumDto existing = redisTemplate.opsForValue().get(cacheKey);
+        KimchiPremiumResDto existing = redisTemplate.opsForValue().get(cacheKey);
         if (hasChanged(existing, dto)) {
             redisTemplate.opsForValue().set(cacheKey, dto, Duration.ofMinutes(5));
         }
     }
 
-    public List<KimchiPremiumDto> getAll() {
+    public List<KimchiPremiumResDto> getAll() {
         Set<String> keys = redisTemplate.keys(PREFIX + "*");
         if (keys == null) return List.of();
 
@@ -50,13 +50,13 @@ public class KimchiPremiumRedisCache {
                 .map(k -> redisTemplate.opsForValue().get(k))
                 .filter(Objects::nonNull)
                 .sorted(Comparator
-                        .comparingInt(KimchiPremiumDto::getSortPriority)
-                        .thenComparing(KimchiPremiumDto::getPremiumRate, Comparator.reverseOrder())
+                        .comparingInt(KimchiPremiumResDto::getSortPriority)
+                        .thenComparing(KimchiPremiumResDto::getPremiumRate, Comparator.reverseOrder())
                 )
                 .toList();
     }
 
-    public List<KimchiPremiumDto> getAllSorted(String sortBy) {
+    public List<KimchiPremiumResDto> getAllSorted(String sortBy) {
         Set<String> keys = redisTemplate.keys(PREFIX + "*");
         if (keys == null) return List.of();
 
@@ -64,7 +64,7 @@ public class KimchiPremiumRedisCache {
                 .map(k -> redisTemplate.opsForValue().get(k))
                 .filter(Objects::nonNull)
                 .sorted(Comparator
-                        .comparingInt(KimchiPremiumDto::getSortPriority)
+                        .comparingInt(KimchiPremiumResDto::getSortPriority)
                         .thenComparing(sortingComparator(sortBy))
                 )
                 .toList();
@@ -73,7 +73,7 @@ public class KimchiPremiumRedisCache {
     /**
      * 거래소 이름 기준으로 필터링 및 정렬 + 사용자 관심코인, 환율, 이미지, 심볼명, priceGap, sortPriority, isFavorite 반영
      */
-    public List<KimchiPremiumDto> getAllFiltered(String userId, String domestic, String overseas, String sortBy) {
+    public List<KimchiPremiumResDto> getAllFiltered(String userId, String domestic, String overseas, String sortBy) {
         Set<String> keys = redisTemplate.keys(PREFIX + "*");
         if (keys == null) return List.of();
 
@@ -87,9 +87,9 @@ public class KimchiPremiumRedisCache {
         double exchangeRate = exchangeRateService.getUsdToKrwRate();
         var coinLogos = coinLogoService.getLogos();
 
-        List<KimchiPremiumDto> result = new java.util.ArrayList<>();
+        List<KimchiPremiumResDto> result = new java.util.ArrayList<>();
         for (String key : keys) {
-            KimchiPremiumDto baseDto = redisTemplate.opsForValue().get(key);
+            KimchiPremiumResDto baseDto = redisTemplate.opsForValue().get(key);
             if (baseDto == null) continue;
             if (!baseDto.getDomesticExchange().equalsIgnoreCase(domestic)
                 || !baseDto.getOverseasExchange().equalsIgnoreCase(overseas)) continue;
@@ -115,21 +115,21 @@ public class KimchiPremiumRedisCache {
         }
 
         result.sort(
-                Comparator.comparing(KimchiPremiumDto::isFavorite).reversed()
-                        .thenComparingInt(KimchiPremiumDto::getSortPriority)
+                Comparator.comparing(KimchiPremiumResDto::isFavorite).reversed()
+                        .thenComparingInt(KimchiPremiumResDto::getSortPriority)
                         .thenComparing(sortingComparator(sortBy))
         );
 
         return result;
     }
 
-    private Comparator<KimchiPremiumDto> sortingComparator(String sortBy) {
+    private Comparator<KimchiPremiumResDto> sortingComparator(String sortBy) {
         return switch (sortBy.toLowerCase()) {
-            case "price" -> Comparator.comparingDouble(KimchiPremiumDto::getDomesticPrice);
-            case "price_desc" -> Comparator.comparingDouble(KimchiPremiumDto::getDomesticPrice).reversed();
-            case "kimp" -> Comparator.comparingDouble(KimchiPremiumDto::getPremiumRate);
-            case "kimp_desc" -> Comparator.comparingDouble(KimchiPremiumDto::getPremiumRate).reversed();
-            default -> Comparator.comparingDouble(KimchiPremiumDto::getDomesticPrice).reversed();
+            case "price" -> Comparator.comparingDouble(KimchiPremiumResDto::getDomesticPrice);
+            case "price_desc" -> Comparator.comparingDouble(KimchiPremiumResDto::getDomesticPrice).reversed();
+            case "kimp" -> Comparator.comparingDouble(KimchiPremiumResDto::getPremiumRate);
+            case "kimp_desc" -> Comparator.comparingDouble(KimchiPremiumResDto::getPremiumRate).reversed();
+            default -> Comparator.comparingDouble(KimchiPremiumResDto::getDomesticPrice).reversed();
         };
     }
 

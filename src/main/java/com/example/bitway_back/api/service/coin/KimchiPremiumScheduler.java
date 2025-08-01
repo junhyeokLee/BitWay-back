@@ -1,6 +1,6 @@
 package com.example.bitway_back.api.service.coin;
 
-import com.example.bitway_back.dto.response.KimchiPremiumDto;
+import com.example.bitway_back.dto.response.KimchiPremiumResDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,7 +19,7 @@ public class KimchiPremiumScheduler {
     @Scheduled(fixedRate = 5000) // 5초마다 캐시 업데이트
     public void updateRedisCache() {
 
-        List<KimchiPremiumDto> list = kimchiPremiumService.getAllPremiums(null, "upbit", "binance", "kimp_desc");
+        List<KimchiPremiumResDto> list = kimchiPremiumService.getAllPremiums(null, "upbit", "binance", "kimp_desc");
         list.forEach(dto -> cache.put(dto));
         log.info("김프 캐시 갱신 완료: {}개", list.size());
 

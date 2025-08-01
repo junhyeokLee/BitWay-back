@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KimchiPremiumDto {
+public class KimchiPremiumResDto {
     private String symbol;              // 예: BTC
     private String symbolName;          // 예: 비트코인
     private String domesticExchange;    // 예: Upbit

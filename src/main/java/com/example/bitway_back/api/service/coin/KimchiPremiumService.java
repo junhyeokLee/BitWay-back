@@ -1,7 +1,7 @@
 package com.example.bitway_back.api.service.coin;
 
 import com.example.bitway_back.domain.coin.CoinLogo;
-import com.example.bitway_back.dto.response.KimchiPremiumDto;
+import com.example.bitway_back.dto.response.KimchiPremiumResDto;
 import com.example.bitway_back.api.service.exchange.ExchangePriceService;
 import com.example.bitway_back.api.service.exchange.ExchangeRateService;
 import com.example.bitway_back.util.KimchiPremiumCalculator;
@@ -21,7 +21,7 @@ public class KimchiPremiumService {
     private final FavoriteService favoriteService;
 
 
-    public List<KimchiPremiumDto> getAllPremiums(String userId, String domestic, String overseas,String sortBy) {
+    public List<KimchiPremiumResDto> getAllPremiums(String userId, String domestic, String overseas, String sortBy) {
         ExchangePriceService exchange = exchangeServices.get(domestic.toLowerCase(Locale.ROOT));
 
 
@@ -42,7 +42,7 @@ public class KimchiPremiumService {
                 .collect(Collectors.toSet())
                 : Set.of(); // 비로그인 사용자면 빈 Set
 
-        List<KimchiPremiumDto> result = new ArrayList<>();
+        List<KimchiPremiumResDto> result = new ArrayList<>();
 
         for (String symbol : domesticPrices.keySet()) {
             if (!overseasPrices.containsKey(symbol)) continue;
@@ -72,7 +72,7 @@ public class KimchiPremiumService {
         }
 
         result.sort(Comparator
-            .comparingInt(KimchiPremiumDto::getSortPriority)
+            .comparingInt(KimchiPremiumResDto::getSortPriority)
             .thenComparing(sortingComparator(sortBy))
         );
 
@@ -80,13 +80,13 @@ public class KimchiPremiumService {
     }
 
 
-    private Comparator<KimchiPremiumDto> sortingComparator(String sortBy) {
+    private Comparator<KimchiPremiumResDto> sortingComparator(String sortBy) {
         return switch (sortBy.toLowerCase()) {
-            case "price" -> Comparator.comparingDouble(KimchiPremiumDto::getDomesticPrice);
-            case "price_desc" -> Comparator.comparingDouble(KimchiPremiumDto::getDomesticPrice).reversed();
-            case "kimp" -> Comparator.comparingDouble(KimchiPremiumDto::getPremiumRate);
-            case "kimp_desc" -> Comparator.comparingDouble(KimchiPremiumDto::getPremiumRate).reversed();
-            default -> Comparator.comparingDouble(KimchiPremiumDto::getDomesticPrice).reversed();
+            case "price" -> Comparator.comparingDouble(KimchiPremiumResDto::getDomesticPrice);
+            case "price_desc" -> Comparator.comparingDouble(KimchiPremiumResDto::getDomesticPrice).reversed();
+            case "kimp" -> Comparator.comparingDouble(KimchiPremiumResDto::getPremiumRate);
+            case "kimp_desc" -> Comparator.comparingDouble(KimchiPremiumResDto::getPremiumRate).reversed();
+            default -> Comparator.comparingDouble(KimchiPremiumResDto::getDomesticPrice).reversed();
         };
     }
 
