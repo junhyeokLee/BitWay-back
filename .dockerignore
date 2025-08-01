@@ -1,5 +1,4 @@
-.gradle
+.git
 build
-out
-.idea
-*.iml
+node_modules
+.gradle
