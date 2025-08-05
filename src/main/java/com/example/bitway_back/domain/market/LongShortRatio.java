@@ -21,3 +21,4 @@ public class LongShortRatio {
     private double shortAccount;
     private LocalDateTime timestamp;
 }
+

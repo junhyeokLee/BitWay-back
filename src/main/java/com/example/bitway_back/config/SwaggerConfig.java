@@ -32,7 +32,7 @@ public class SwaggerConfig {
 
         return new OpenAPI()
                 .info(apiInfo())
-                .addServersItem(server) // 이 라인 추가
+//                .addServersItem(server) // 이 라인 추가
                 .addSecurityItem(securityRequirement)
                 .components(components);
     }

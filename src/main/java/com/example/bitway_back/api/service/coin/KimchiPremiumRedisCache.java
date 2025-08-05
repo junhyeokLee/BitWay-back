@@ -1,7 +1,9 @@
 package com.example.bitway_back.api.service.coin;
+import com.example.bitway_back.domain.market.SentimentIndex;
 import com.example.bitway_back.dto.response.KimchiPremiumResDto;
 import com.example.bitway_back.api.service.exchange.ExchangeRateService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +19,9 @@ import static com.example.bitway_back.util.KimchiPremiumCalculator.calculate;
 @RequiredArgsConstructor
 public class KimchiPremiumRedisCache {
 
+    @Qualifier("kimchiPremiumRedisTemplate")
     private final RedisTemplate<String, KimchiPremiumResDto> redisTemplate;
+
     private static final String PREFIX = "kimp:";
     private final FavoriteService favoriteService;
     private final ExchangeRateService exchangeRateService;

@@ -23,7 +23,6 @@ public class CoinLogo {
     @Column(columnDefinition = "TEXT")
     private String imageUrl;
 
-    @ColumnDefault("")
-    @Column(nullable = true,name = "symbol_name")
+    @Column(name = "symbol_name", nullable = true, columnDefinition = "varchar(255) default ''")
     private String symbolName;
 }
