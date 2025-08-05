@@ -4,6 +4,8 @@ import com.example.bitway_back.domain.market.LongShortRatio;
 import com.example.bitway_back.domain.market.SentimentIndex;
 import com.example.bitway_back.api.repository.market.LongShortRatioRepository;
 import com.example.bitway_back.api.repository.market.SentimentIndexRepository;
+import org.springframework.context.event.EventListener;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -21,13 +23,22 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MarketSentimentService {
 
+    @EventListener(ApplicationReadyEvent.class)
+    public void initCacheAfterStartup() {
+        if (sentimentIndexRedisTemplate.opsForValue().get("market:sentiment") == null) {
+            fetchAndCacheSentimentIndex();
+        }
+        if (longShortRedisTemplate.opsForValue().get("market:longshort") == null) {
+            fetchAndSaveLongShortRatio();
+        }
+    }
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Qualifier("sentimentIndexRedisTemplate")
-    private RedisTemplate<String, SentimentIndex> sentimentIndexRedisTemplate;
-
+    private final RedisTemplate<String, SentimentIndex> sentimentIndexRedisTemplate;
     @Qualifier("longShortRedisTemplate")
-    private RedisTemplate<String, LongShortRatio> longShortRedisTemplate;
+    private final RedisTemplate<String, LongShortRatio> longShortRedisTemplate;
 
     public void fetchAndCacheSentimentIndex() {
         String url = "https://api.alternative.me/fng/";

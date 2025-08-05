@@ -1,35 +1,29 @@
-# docker-compose.yml
 version: '3.8'
 services:
   db:
     image: postgres:15
-    container_name: bitway-db
-    environment:
-      POSTGRES_DB: bitway
-      POSTGRES_USER: bitway_user
-      POSTGRES_PASSWORD: bitway_pass
+    container_name: bitway_postgres
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: bitway123
+      POSTGRES_DB: bitway_local
     volumes:
       - pgdata:/var/lib/postgresql/data
-    restart: always
+    networks:
+      - bitway-net
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: bitway-app
+  redis:
+    image: redis:7
+    container_name: bitway_redis
     ports:
-      - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_HOST: db
-      SPRING_DATASOURCE_PORT: 5432
-      SPRING_DATASOURCE_DB: bitway
-      SPRING_DATASOURCE_USERNAME: bitway_user
-      SPRING_DATASOURCE_PASSWORD: bitway_pass
-    depends_on:
-      - db
+      - "6379:6379"
+    networks:
+      - bitway-net
 
 volumes:
   pgdata:
 
+networks:
+  bitway-net:

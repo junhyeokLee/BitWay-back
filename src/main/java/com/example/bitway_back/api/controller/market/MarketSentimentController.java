@@ -15,6 +15,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -41,7 +42,11 @@ public class MarketSentimentController {
     @GetMapping("/sentiment")
     public SentimentIndex getLatestSentimentFromCache() {
         SentimentIndex index = sentimentIndexRedisTemplate.opsForValue().get("market:sentiment");
-        if (index == null) throw new RuntimeException("데이터 없음 (캐시)");
+        if (index == null) {
+            marketSentimentService.fetchAndCacheSentimentIndex(); // 즉시 요청
+            index = sentimentIndexRedisTemplate.opsForValue().get("market:sentiment");
+            if (index == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "데이터 없음");
+        }
         return index;
     }
 
